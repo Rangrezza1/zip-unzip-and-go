@@ -1,0 +1,221 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
+import { useProduct } from '@/hooks/useProducts';
+import { useCartStore } from '@/stores/cartStore';
+import { formatPrice, getDiscountPercentage, getProductBadges, getBadgeClass } from '@/lib/shopify';
+import { Loader2, Minus, Plus, ChevronDown } from 'lucide-react';
+import { toast } from 'sonner';
+import Header from '@/components/Header';
+import AnnouncementBar from '@/components/AnnouncementBar';
+import Footer from '@/components/Footer';
+import useEmblaCarousel from 'embla-carousel-react';
+
+const ProductPage = () => {
+  const { handle } = useParams<{ handle: string }>();
+  const { data: product, isLoading } = useProduct(handle || '');
+  const addItem = useCartStore(state => state.addItem);
+  const cartLoading = useCartStore(state => state.isLoading);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [quantity, setQuantity] = useState(1);
+  const [activeImage, setActiveImage] = useState(0);
+  const [openAccordion, setOpenAccordion] = useState<string | null>('description');
+  const [initialized, setInitialized] = useState(false);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: 'start' });
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setActiveImage(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.on('select', onSelect);
+    return () => { emblaApi.off('select', onSelect); };
+  }, [emblaApi, onSelect]);
+
+  useEffect(() => {
+    if (emblaApi) emblaApi.scrollTo(activeImage);
+  }, [activeImage, emblaApi]);
+
+  useEffect(() => {
+    if (product && !initialized) {
+      const options = product.options || [];
+      const initial: Record<string, string> = {};
+      options.forEach((opt: { name: string; values: string[] }) => { initial[opt.name] = opt.values[0]; });
+      setSelectedOptions(initial);
+      setInitialized(true);
+    }
+  }, [product, initialized]);
+
+  if (isLoading) {
+    return (<><AnnouncementBar /><Header /><div className="flex justify-center items-center min-h-[60vh]"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div><Footer /></>);
+  }
+  if (!product) {
+    return (<><AnnouncementBar /><Header /><div className="flex justify-center items-center min-h-[60vh]"><p className="text-muted-foreground text-sm">Product not found</p></div><Footer /></>);
+  }
+
+  const images = product.images?.edges || [];
+  const variants = product.variants?.edges || [];
+  const options = product.options || [];
+  const currentOpts = Object.keys(selectedOptions).length > 0 ? selectedOptions : Object.fromEntries(options.map((o: { name: string; values: string[] }) => [o.name, o.values[0]]));
+
+  const getSelectedVariant = () => variants.find((v: { node: { selectedOptions: Array<{ name: string; value: string }> } }) => v.node.selectedOptions.every((so: { name: string; value: string }) => currentOpts[so.name] === so.value))?.node;
+
+  const selectedVariant = getSelectedVariant();
+  const price = selectedVariant?.price || product.priceRange?.minVariantPrice;
+  const compareAtPrice = selectedVariant?.compareAtPrice;
+  const discount = getDiscountPercentage(price?.amount, compareAtPrice?.amount);
+  const badges = getProductBadges(product.tags || []);
+
+  const handleOptionChange = (optionName: string, value: string) => {
+    const newOptions = { ...selectedOptions, [optionName]: value };
+    setSelectedOptions(newOptions);
+    const variant = variants.find((v: { node: { selectedOptions: Array<{ name: string; value: string }> } }) => v.node.selectedOptions.every((so: { name: string; value: string }) => newOptions[so.name] === so.value))?.node;
+    if (variant?.image?.url) {
+      const imgIdx = images.findIndex((img: { node: { url: string } }) => img.node.url === variant.image.url);
+      if (imgIdx >= 0) setActiveImage(imgIdx);
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (!selectedVariant) return;
+    await addItem({ product: { node: product }, variantId: selectedVariant.id, variantTitle: selectedVariant.title, price: selectedVariant.price, quantity, selectedOptions: selectedVariant.selectedOptions || [] });
+    toast.success('Added to cart', { description: product.title, position: 'top-center' });
+  };
+
+  const handleBuyNow = async () => {
+    if (!selectedVariant) return;
+    await addItem({ product: { node: product }, variantId: selectedVariant.id, variantTitle: selectedVariant.title, price: selectedVariant.price, quantity, selectedOptions: selectedVariant.selectedOptions || [] });
+    const checkoutUrl = useCartStore.getState().getCheckoutUrl();
+    if (checkoutUrl) window.open(checkoutUrl, '_blank');
+  };
+
+  const accordionItems = [
+    { id: 'description', title: 'Description', content: product.descriptionHtml || product.description || 'No description available.' },
+    { id: 'details', title: 'Fabric & Care', content: 'Please refer to the product tag for fabric composition and care instructions.' },
+    { id: 'shipping', title: 'Delivery & Returns', content: 'Standard delivery in 3-5 business days. Easy returns within 7 days of delivery.' },
+    { id: 'size-guide', title: 'Size Guide', content: 'Please refer to our size chart for accurate measurements.' },
+  ];
+
+  return (
+    <>
+      <AnnouncementBar />
+      <Header />
+      <main className="pb-20 md:pb-8">
+        <div className="md:container md:py-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-8">
+            <div>
+              <div className="md:hidden">
+                <div ref={emblaRef} className="overflow-hidden embla-gallery">
+                  <div className="flex">
+                    {images.map((img: { node: { url: string; altText: string | null } }, idx: number) => (
+                      <div key={idx} className="flex-[0_0_100%] min-w-0">
+                        <div className="aspect-[3/4] bg-secondary">
+                          <img src={img.node.url} alt={img.node.altText || product.title} className="w-full h-full object-cover" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {images.length > 1 && (
+                  <div className="flex items-center justify-center gap-1.5 py-3">
+                    {images.map((_: unknown, idx: number) => (
+                      <button key={idx} onClick={() => setActiveImage(idx)} className={`gallery-dot ${idx === activeImage ? 'gallery-dot-active' : ''}`} />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="hidden md:block">
+                <div className="aspect-[3/4] bg-secondary overflow-hidden mb-3">
+                  {images[activeImage] && <img src={images[activeImage].node.url} alt={images[activeImage].node.altText || product.title} className="w-full h-full object-cover cursor-zoom-in hover:scale-105 transition-transform duration-500" />}
+                </div>
+                {images.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto thumb-scroll">
+                    {images.map((img: { node: { url: string; altText: string | null } }, idx: number) => (
+                      <button key={idx} onClick={() => setActiveImage(idx)} className={`w-16 h-20 flex-shrink-0 overflow-hidden border-2 transition-colors ${idx === activeImage ? 'border-foreground' : 'border-transparent hover:border-muted-foreground/30'}`}>
+                        <img src={img.node.url} alt={img.node.altText || ''} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="px-4 md:px-0 pt-4 md:pt-0">
+              {(badges.length > 0 || discount) && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {discount && <span className="badge-sale">-{discount}% OFF</span>}
+                  {badges.map(badge => <span key={badge.label} className={getBadgeClass(badge.type)}>{badge.label}</span>)}
+                </div>
+              )}
+              <h1 className="font-display text-xl md:text-2xl font-bold mb-2 leading-tight">{product.title}</h1>
+              <div className="flex items-center gap-2 mb-5">
+                <span className="text-lg font-bold text-foreground">{price && formatPrice(price.amount, price.currencyCode)}</span>
+                {compareAtPrice && discount && <span className="price-compare text-sm">{formatPrice(compareAtPrice.amount, compareAtPrice.currencyCode)}</span>}
+                {discount && <span className="text-xs font-bold text-destructive bg-destructive/10 px-1.5 py-0.5">SAVE {discount}%</span>}
+              </div>
+              {options.filter((o: { name: string; values: string[] }) => o.name !== 'Title' || o.values.length > 1).map((option: { name: string; values: string[] }) => (
+                <div key={option.name} className="mb-4">
+                  <label className="text-xs font-bold tracking-[0.15em] uppercase mb-2 block">{option.name}: <span className="font-normal text-muted-foreground">{currentOpts[option.name]}</span></label>
+                  <div className="flex flex-wrap gap-2">
+                    {option.values.map((value: string) => {
+                      const isSelected = currentOpts[option.name] === value;
+                      const testOpts = { ...currentOpts, [option.name]: value };
+                      const variant = variants.find((v: { node: { selectedOptions: Array<{ name: string; value: string }> } }) => v.node.selectedOptions.every((so: { name: string; value: string }) => testOpts[so.name] === so.value))?.node;
+                      const available = variant?.availableForSale !== false;
+                      return (
+                        <button key={value} onClick={() => handleOptionChange(option.name, value)} disabled={!available}
+                          className={`min-w-[44px] px-3 py-2 text-xs font-medium border transition-all active:scale-95 ${isSelected ? 'border-foreground bg-foreground text-background' : available ? 'border-border hover:border-foreground' : 'border-border/40 text-muted-foreground/40 line-through cursor-not-allowed'}`}
+                        >{value}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              <div className="mb-5">
+                <label className="text-xs font-bold tracking-[0.15em] uppercase mb-2 block">Quantity</label>
+                <div className="flex items-center border w-fit">
+                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"><Minus className="w-3.5 h-3.5" /></button>
+                  <span className="w-10 text-center text-sm font-medium">{quantity}</span>
+                  <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"><Plus className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+              <div className="hidden md:flex flex-col gap-2.5 mb-6">
+                <button onClick={handleAddToCart} disabled={cartLoading || !selectedVariant?.availableForSale} className="cta-button w-full flex items-center justify-center gap-2 disabled:opacity-50">
+                  {cartLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add to Cart'}
+                </button>
+                <button onClick={handleBuyNow} disabled={cartLoading || !selectedVariant?.availableForSale} className="cta-button-outline w-full disabled:opacity-50">Buy Now</button>
+                {selectedVariant && !selectedVariant.availableForSale && <p className="text-destructive text-xs font-semibold text-center">Out of Stock</p>}
+              </div>
+              <div className="border-t">
+                {accordionItems.map(item => (
+                  <div key={item.id} className="border-b">
+                    <button onClick={() => setOpenAccordion(openAccordion === item.id ? null : item.id)} className="w-full flex items-center justify-between py-3.5 text-xs font-bold tracking-[0.15em] uppercase">
+                      {item.title}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openAccordion === item.id ? 'rotate-180' : ''}`} />
+                    </button>
+                    <div className={`overflow-hidden transition-all duration-200 ${openAccordion === item.id ? 'max-h-96 pb-4' : 'max-h-0'}`}>
+                      <div className="text-xs text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: item.content }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t px-4 py-2.5 flex items-center gap-3 md:hidden z-50">
+        <div className="flex-shrink-0">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Price</p>
+          <p className="font-bold text-sm">{price && formatPrice(price.amount, price.currencyCode)}</p>
+        </div>
+        <button onClick={handleAddToCart} disabled={cartLoading || !selectedVariant?.availableForSale} className="flex-1 cta-button flex items-center justify-center gap-2 disabled:opacity-50 py-3">
+          {cartLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add to Cart'}
+        </button>
+        <button onClick={handleBuyNow} disabled={cartLoading || !selectedVariant?.availableForSale} className="flex-1 cta-button-outline flex items-center justify-center py-3 text-xs">Buy Now</button>
+      </div>
+      <Footer />
+    </>
+  );
+};
+
+export default ProductPage;

@@ -1,12 +1,44 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useEffect } from 'react';
+import AnnouncementBar from '@/components/AnnouncementBar';
+import Header from '@/components/Header';
+import HeroBanner from '@/components/HeroBanner';
+import ShopByCategory from '@/components/ShopByCategory';
+import PromoBanner from '@/components/PromoBanner';
+import Footer from '@/components/Footer';
+import SectionWrapper from '@/components/SectionWrapper';
+import FeaturedCollectionShowcase from '@/components/FeaturedCollectionShowcase';
+import { useThemeStore } from '@/stores/themeStore';
+import { useCollections } from '@/hooks/useCollections';
 
 const Index = () => {
+  const { theme, syncFeaturedCollections } = useThemeStore();
+  const { data: collections } = useCollections();
+
+  useEffect(() => {
+    if (collections && collections.length > 0) {
+      syncFeaturedCollections(collections.map(c => ({ handle: c.handle, title: c.title })));
+    }
+  }, [collections, syncFeaturedCollections]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <AnnouncementBar />
+      <Header />
+      <main className="flex-1">
+        <SectionWrapper sectionId="hero">
+          <HeroBanner />
+        </SectionWrapper>
+        <SectionWrapper sectionId="categories">
+          <ShopByCategory />
+        </SectionWrapper>
+        {theme.featuredCollections.map((fc) => (
+          <FeaturedCollectionShowcase key={fc.id} config={fc} />
+        ))}
+        <SectionWrapper sectionId="promo">
+          <PromoBanner />
+        </SectionWrapper>
+      </main>
+      <Footer />
     </div>
   );
 };
