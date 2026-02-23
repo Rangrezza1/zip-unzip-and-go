@@ -57,7 +57,16 @@ export interface HeroBanner {
   ctaLink: string;
 }
 
+export interface CategoryItem {
+  id: string;
+  title: string;
+  slug: string;
+  imageUrl: string;
+  enabled: boolean;
+}
+
 export interface ThemeSettings {
+  categoryItems: CategoryItem[];
   heroBanners: HeroBanner[];
   heroAutoRotate: boolean;
   heroRotateInterval: number;
@@ -93,6 +102,7 @@ const defaultSections: SectionSettings[] = [
 ];
 
 const defaultTheme: ThemeSettings = {
+  categoryItems: [],
   heroBanners: [
     { id: 'default-1', imageUrl: '', title: 'Upto 50% OFF', subtitle: 'Premium Lawn & Dhanak collections. Shop Now Before It\'s Gone!', ctaText: 'Shop Now', ctaLink: '/collections' },
   ],
@@ -136,6 +146,10 @@ interface ThemeStore {
   addHeroBanner: () => void;
   updateHeroBanner: (id: string, partial: Partial<HeroBanner>) => void;
   removeHeroBanner: (id: string) => void;
+  updateCategoryItem: (id: string, partial: Partial<CategoryItem>) => void;
+  removeCategoryItem: (id: string) => void;
+  reorderCategoryItems: (items: CategoryItem[]) => void;
+  syncCategoryItems: (shopifyCollections: { handle: string; title: string; imageUrl: string }[]) => void;
   addFeaturedCollection: (handle: string, title: string) => void;
   updateFeaturedCollection: (id: string, partial: Partial<FeaturedCollectionSection>) => void;
   removeFeaturedCollection: (id: string) => void;
@@ -191,6 +205,32 @@ export const useThemeStore = create<ThemeStore>()(
 
       removeHeroBanner: (id) =>
         set({ theme: { ...get().theme, heroBanners: get().theme.heroBanners.filter((b) => b.id !== id) } }),
+
+      updateCategoryItem: (id, partial) =>
+        set({ theme: { ...get().theme, categoryItems: get().theme.categoryItems.map((c) => c.id === id ? { ...c, ...partial } : c) } }),
+
+      removeCategoryItem: (id) =>
+        set({ theme: { ...get().theme, categoryItems: get().theme.categoryItems.filter((c) => c.id !== id) } }),
+
+      reorderCategoryItems: (items) =>
+        set({ theme: { ...get().theme, categoryItems: items } }),
+
+      syncCategoryItems: (shopifyCollections) => {
+        const existing = get().theme.categoryItems;
+        const existingHandles = new Set(existing.map(c => c.slug));
+        const newItems = shopifyCollections
+          .filter(c => !existingHandles.has(c.handle))
+          .map(c => ({
+            id: `cat-${c.handle}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            title: c.title,
+            slug: c.handle,
+            imageUrl: c.imageUrl,
+            enabled: true,
+          }));
+        if (newItems.length > 0) {
+          set({ theme: { ...get().theme, categoryItems: [...existing, ...newItems] } });
+        }
+      },
 
       addFeaturedCollection: (handle, title) =>
         set({ theme: { ...get().theme, featuredCollections: [...get().theme.featuredCollections, {

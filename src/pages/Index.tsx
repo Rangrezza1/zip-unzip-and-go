@@ -11,14 +11,15 @@ import { useThemeStore } from '@/stores/themeStore';
 import { useCollections } from '@/hooks/useCollections';
 
 const Index = () => {
-  const { theme, syncFeaturedCollections } = useThemeStore();
+  const { theme, syncFeaturedCollections, syncCategoryItems } = useThemeStore();
   const { data: collections } = useCollections();
 
   useEffect(() => {
     if (collections && collections.length > 0) {
       syncFeaturedCollections(collections.map(c => ({ handle: c.handle, title: c.title })));
+      syncCategoryItems(collections.map(c => ({ handle: c.handle, title: c.title, imageUrl: c.image?.url || '' })));
     }
-  }, [collections, syncFeaturedCollections]);
+  }, [collections, syncFeaturedCollections, syncCategoryItems]);
 
   return (
     <div className="min-h-screen flex flex-col">

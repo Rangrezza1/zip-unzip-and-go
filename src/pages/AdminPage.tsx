@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useThemeStore, CollectionSectionSettings, SectionSettings, HeroBanner, FeaturedCollectionSection } from '@/stores/themeStore';
+import { useThemeStore, CollectionSectionSettings, SectionSettings, HeroBanner, FeaturedCollectionSection, CategoryItem } from '@/stores/themeStore';
 import { useCollections } from '@/hooks/useCollections';
 import { ArrowLeft, Plus, Trash2, Copy, GripVertical, ChevronDown, ChevronUp, RotateCcw, Eye } from 'lucide-react';
 import { toast } from 'sonner';
@@ -8,7 +8,7 @@ const FONT_OPTIONS = ['DM Sans', 'Inter', 'Poppins', 'Playfair Display', 'Lora',
 const HEADING_WEIGHTS = ['400', '500', '600', '700', '800'];
 const HEADING_STYLES: CollectionSectionSettings['headingStyle'][] = ['none', 'underline', 'accent-bar', 'icon', 'divider'];
 
-type Tab = 'global' | 'hero' | 'sections' | 'featured';
+type Tab = 'global' | 'hero' | 'categories' | 'sections' | 'featured';
 
 const ColorInput = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => {
   const hslToHex = (hsl: string) => {
@@ -64,19 +64,36 @@ const SelectInput = ({ label, value, options, onChange }: { label: string; value
 );
 
 const AdminPage = () => {
-  const { theme, updateTheme, updateSection, removeSection, duplicateSection, addHeroBanner, updateHeroBanner, removeHeroBanner, updateFeaturedCollection, removeFeaturedCollection, reorderFeaturedCollections, syncFeaturedCollections, resetTheme } = useThemeStore();
+  const { theme, updateTheme, updateSection, removeSection, duplicateSection, addHeroBanner, updateHeroBanner, removeHeroBanner, updateFeaturedCollection, removeFeaturedCollection, reorderFeaturedCollections, syncFeaturedCollections, updateCategoryItem, removeCategoryItem, reorderCategoryItems, syncCategoryItems, resetTheme } = useThemeStore();
   const { data: collections } = useCollections();
   const [activeTab, setActiveTab] = useState<Tab>('global');
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedBanner, setExpandedBanner] = useState<string | null>(null);
   const [expandedFeatured, setExpandedFeatured] = useState<string | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'global', label: 'Global' },
     { key: 'hero', label: 'Hero Banners' },
+    { key: 'categories', label: 'Categories' },
     { key: 'sections', label: 'Sections' },
     { key: 'featured', label: 'Featured Collections' },
   ];
+
+  const moveCategory = (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= theme.categoryItems.length) return;
+    const items = [...theme.categoryItems];
+    [items[index], items[newIndex]] = [items[newIndex], items[index]];
+    reorderCategoryItems(items);
+  };
+
+  const handleSyncCategories = () => {
+    if (collections && collections.length > 0) {
+      syncCategoryItems(collections.map(c => ({ handle: c.handle, title: c.title, imageUrl: c.image?.url || '' })));
+      toast.success('Categories synced from Shopify');
+    } else { toast.info('No collections found to sync'); }
+  };
 
   const moveFeatured = (index: number, direction: 'up' | 'down') => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
@@ -176,6 +193,48 @@ const AdminPage = () => {
             <button onClick={addHeroBanner} className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors">
               <Plus className="w-4 h-4" /> Add Banner
             </button>
+          </div>
+        )}
+
+        {activeTab === 'categories' && (
+          <div className="space-y-4 max-w-2xl">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Manage categories shown in "Shop by Category".</p>
+              <button onClick={handleSyncCategories} className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-medium px-3 py-1.5 border rounded hover:bg-secondary transition-colors">
+                <RotateCcw className="w-3 h-3" /> Sync
+              </button>
+            </div>
+            {theme.categoryItems.length === 0 && (
+              <div className="text-center py-12 bg-card border rounded-lg">
+                <p className="text-muted-foreground text-sm mb-2">No categories yet</p>
+                <button onClick={handleSyncCategories} className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary hover:text-primary/80">Sync from Shopify</button>
+              </div>
+            )}
+            {theme.categoryItems.map((cat, index) => (
+              <div key={cat.id} className="bg-card border rounded-lg overflow-hidden">
+                <div className="flex items-center px-4 py-3 gap-3">
+                  <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
+                  <div className="flex flex-col gap-0.5">
+                    <button onClick={() => moveCategory(index, 'up')} disabled={index === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronUp className="w-3 h-3" /></button>
+                    <button onClick={() => moveCategory(index, 'down')} disabled={index === theme.categoryItems.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronDown className="w-3 h-3" /></button>
+                  </div>
+                  <ToggleSwitch label="" checked={cat.enabled} onChange={(v) => updateCategoryItem(cat.id, { enabled: v })} />
+                  {cat.imageUrl && <img src={cat.imageUrl} alt={cat.title} className="w-8 h-8 object-cover rounded" />}
+                  <span className="text-xs font-semibold uppercase tracking-wider flex-1 truncate">{cat.title}</span>
+                  <button onClick={() => setExpandedCategory(expandedCategory === cat.id ? null : cat.id)}>
+                    {expandedCategory === cat.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  <button onClick={() => removeCategoryItem(cat.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                </div>
+                {expandedCategory === cat.id && (
+                  <div className="px-4 pb-4 pt-2 border-t space-y-3">
+                    <div className="flex items-center justify-between gap-3"><label className="text-xs font-medium whitespace-nowrap">Title</label><input type="text" value={cat.title} onChange={(e) => updateCategoryItem(cat.id, { title: e.target.value })} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" /></div>
+                    <div className="flex items-center justify-between gap-3"><label className="text-xs font-medium whitespace-nowrap">Image URL</label><input type="text" value={cat.imageUrl} onChange={(e) => updateCategoryItem(cat.id, { imageUrl: e.target.value })} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" placeholder="https://..." /></div>
+                    <div className="flex items-center justify-between gap-3"><label className="text-xs font-medium whitespace-nowrap">Slug</label><input type="text" value={cat.slug} onChange={(e) => updateCategoryItem(cat.id, { slug: e.target.value })} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" /></div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
 
