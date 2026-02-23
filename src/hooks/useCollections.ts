@@ -5,6 +5,7 @@ export interface ShopifyCollection {
   id: string;
   title: string;
   handle: string;
+  image: { url: string; altText: string | null } | null;
 }
 
 const COLLECTIONS_QUERY = `
@@ -15,6 +16,10 @@ const COLLECTIONS_QUERY = `
           id
           title
           handle
+          image {
+            url
+            altText
+          }
         }
       }
     }
