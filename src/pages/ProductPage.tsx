@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useProduct } from '@/hooks/useProducts';
 import { useCartStore } from '@/stores/cartStore';
+import { useThemeStore } from '@/stores/themeStore';
 import { formatPrice, getDiscountPercentage, getProductBadges, getBadgeClass } from '@/lib/shopify';
-import { Loader2, Minus, Plus, ChevronDown } from 'lucide-react';
+import { Loader2, Minus, Plus, ChevronDown, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
 import AnnouncementBar from '@/components/AnnouncementBar';
@@ -11,14 +12,15 @@ import Footer from '@/components/Footer';
 import useEmblaCarousel from 'embla-carousel-react';
 import SalesCounter from '@/components/widgets/SalesCounter';
 import LiveViewerCount from '@/components/widgets/LiveViewerCount';
-import RecentSalesPopup from '@/components/widgets/RecentSalesPopup';
 import CountdownTimer from '@/components/widgets/CountdownTimer';
+import ProductReviewSection from '@/components/ProductReviewSection';
 
 const ProductPage = () => {
   const { handle } = useParams<{ handle: string }>();
   const { data: product, isLoading } = useProduct(handle || '');
   const addItem = useCartStore(state => state.addItem);
   const cartLoading = useCartStore(state => state.isLoading);
+  const whatsapp = useThemeStore(s => s.theme.whatsapp ?? { enabled: false, phoneNumber: '', message: '' });
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
@@ -94,11 +96,15 @@ const ProductPage = () => {
     if (checkoutUrl) window.open(checkoutUrl, '_blank');
   };
 
+  const handleWhatsApp = () => {
+    if (!whatsapp.phoneNumber) return;
+    const text = encodeURIComponent(`${whatsapp.message}\n\n${product.title}\n${price ? formatPrice(price.amount, price.currencyCode) : ''}\n${window.location.href}`);
+    window.open(`https://wa.me/${whatsapp.phoneNumber.replace(/[^0-9]/g, '')}?text=${text}`, '_blank');
+  };
+
   const accordionItems = [
     { id: 'description', title: 'Description', content: product.descriptionHtml || product.description || 'No description available.' },
-    { id: 'details', title: 'Fabric & Care', content: 'Please refer to the product tag for fabric composition and care instructions.' },
     { id: 'shipping', title: 'Delivery & Returns', content: 'Standard delivery in 3-5 business days. Easy returns within 7 days of delivery.' },
-    { id: 'size-guide', title: 'Size Guide', content: 'Please refer to our size chart for accurate measurements.' },
   ];
 
   return (
@@ -158,7 +164,9 @@ const ProductPage = () => {
                 {compareAtPrice && discount && <span className="price-compare text-sm">{formatPrice(compareAtPrice.amount, compareAtPrice.currencyCode)}</span>}
                 {discount && <span className="text-xs font-bold text-destructive bg-destructive/10 px-1.5 py-0.5">SAVE {discount}%</span>}
               </div>
-              <LiveViewerCount />
+              <div className="mb-4">
+                <LiveViewerCount />
+              </div>
               {options.filter((o: { name: string; values: string[] }) => o.name !== 'Title' || o.values.length > 1).map((option: { name: string; values: string[] }) => (
                 <div key={option.name} className="mb-4">
                   <label className="text-xs font-bold tracking-[0.15em] uppercase mb-2 block">{option.name}: <span className="font-normal text-muted-foreground">{currentOpts[option.name]}</span></label>
@@ -191,6 +199,11 @@ const ProductPage = () => {
                   {cartLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add to Cart'}
                 </button>
                 <button onClick={handleBuyNow} disabled={cartLoading || !selectedVariant?.availableForSale} className="cta-button-outline w-full disabled:opacity-50">Buy Now</button>
+                {whatsapp.enabled && whatsapp.phoneNumber && (
+                  <button onClick={handleWhatsApp} className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-semibold uppercase tracking-wider border-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white transition-colors">
+                    <MessageCircle className="w-4 h-4" /> Order on WhatsApp
+                  </button>
+                )}
                 {selectedVariant && !selectedVariant.availableForSale && <p className="text-destructive text-xs font-semibold text-center">Out of Stock</p>}
               </div>
               <div className="border-t">
@@ -209,8 +222,9 @@ const ProductPage = () => {
             </div>
           </div>
         </div>
+        <ProductReviewSection productHandle={handle || ''} productTitle={product.title} />
       </main>
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t px-4 py-2.5 flex items-center gap-3 md:hidden z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t px-4 py-2.5 flex items-center gap-2 md:hidden z-50">
         <div className="flex-shrink-0">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Price</p>
           <p className="font-bold text-sm">{price && formatPrice(price.amount, price.currencyCode)}</p>
@@ -218,9 +232,14 @@ const ProductPage = () => {
         <button onClick={handleAddToCart} disabled={cartLoading || !selectedVariant?.availableForSale} className="flex-1 cta-button flex items-center justify-center gap-2 disabled:opacity-50 py-3">
           {cartLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add to Cart'}
         </button>
-        <button onClick={handleBuyNow} disabled={cartLoading || !selectedVariant?.availableForSale} className="flex-1 cta-button-outline flex items-center justify-center py-3 text-xs">Buy Now</button>
+        {whatsapp.enabled && whatsapp.phoneNumber ? (
+          <button onClick={handleWhatsApp} className="flex-shrink-0 w-11 h-11 rounded-full bg-[#25D366] text-white flex items-center justify-center active:scale-95">
+            <MessageCircle className="w-5 h-5" />
+          </button>
+        ) : (
+          <button onClick={handleBuyNow} disabled={cartLoading || !selectedVariant?.availableForSale} className="flex-1 cta-button-outline flex items-center justify-center py-3 text-xs">Buy Now</button>
+        )}
       </div>
-      <RecentSalesPopup />
       <Footer />
     </>
   );

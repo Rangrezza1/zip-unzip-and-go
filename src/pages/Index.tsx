@@ -7,6 +7,8 @@ import PromoBanner from '@/components/PromoBanner';
 import Footer from '@/components/Footer';
 import SectionWrapper from '@/components/SectionWrapper';
 import FeaturedCollectionShowcase from '@/components/FeaturedCollectionShowcase';
+import BestSellingCarousel from '@/components/BestSellingCarousel';
+import AllReviewsSection from '@/components/AllReviewsSection';
 import { useThemeStore } from '@/stores/themeStore';
 import { useCollections } from '@/hooks/useCollections';
 
@@ -33,12 +35,14 @@ const Index = () => {
         <SectionWrapper sectionId="categories">
           <ShopByCategory />
         </SectionWrapper>
+        <BestSellingCarousel />
         {theme.featuredCollections.map((fc) => (
           <FeaturedCollectionShowcase key={fc.id} config={fc} />
         ))}
         <SectionWrapper sectionId="promo">
           <PromoBanner />
         </SectionWrapper>
+        <AllReviewsSection />
       </main>
       <Footer />
     </div>

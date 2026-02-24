@@ -131,6 +131,25 @@ export interface ProductWidgets {
   countdown: CountdownSettings;
 }
 
+export interface ReviewsSectionSettings {
+  enabled: boolean;
+  headline: string;
+  displayCount: number;
+}
+
+export interface BestSellingSettings {
+  enabled: boolean;
+  collectionHandle: string;
+  headline: string;
+  productLimit: number;
+}
+
+export interface WhatsAppSettings {
+  enabled: boolean;
+  phoneNumber: string;
+  message: string;
+}
+
 export interface ThemeSettings {
   // Announcement bar
   announcementMessages: AnnouncementMessage[];
@@ -171,6 +190,9 @@ export interface ThemeSettings {
   collectionSections: CollectionSectionSettings[];
   featuredCollections: FeaturedCollectionSection[];
   productWidgets: ProductWidgets;
+  reviewsSection: ReviewsSectionSettings;
+  bestSelling: BestSellingSettings;
+  whatsapp: WhatsAppSettings;
 }
 
 const defaultSections: SectionSettings[] = [
@@ -233,6 +255,9 @@ const defaultTheme: ThemeSettings = {
     recentSales: { enabled: true, productNames: [], productImageUrl: '', displayDuration: 4, initialDelay: 3, repeatInterval: 10, collectionHandle: '' },
     countdown: { enabled: true, label: 'Hurry! Offer ends in', hours: 1, minutes: 24, seconds: 48, resetHours: 1, resetMinutes: 30, resetSeconds: 60 },
   },
+  reviewsSection: { enabled: true, headline: 'What Our Customers Say', displayCount: 10 },
+  bestSelling: { enabled: true, collectionHandle: '', headline: 'Best Sellers', productLimit: 10 },
+  whatsapp: { enabled: true, phoneNumber: '', message: 'Hi! I want to order this product:' },
 };
 
 interface ThemeStore {
@@ -444,15 +469,16 @@ export const useThemeStore = create<ThemeStore>()(
       storage: createJSONStorage(() => localStorage),
       merge: (persisted, current) => {
         const persistedState = persisted as { theme?: Partial<ThemeSettings> } | undefined;
+        const pt = persistedState?.theme || {};
         return {
           ...current,
           theme: {
             ...defaultTheme,
-            ...(persistedState?.theme || {}),
-            productWidgets: {
-              ...defaultTheme.productWidgets,
-              ...(persistedState?.theme?.productWidgets || {}),
-            },
+            ...pt,
+            productWidgets: { ...defaultTheme.productWidgets, ...(pt.productWidgets || {}) },
+            reviewsSection: { ...defaultTheme.reviewsSection, ...(pt.reviewsSection || {}) },
+            bestSelling: { ...defaultTheme.bestSelling, ...(pt.bestSelling || {}) },
+            whatsapp: { ...defaultTheme.whatsapp, ...(pt.whatsapp || {}) },
           },
         } as ThemeStore;
       },
