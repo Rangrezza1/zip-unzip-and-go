@@ -76,20 +76,20 @@ const RecentSalesPopup = () => {
 
   return (
     <div
-      className={`fixed bottom-4 left-4 z-[100] max-w-[300px] bg-background border shadow-lg rounded-lg overflow-hidden transition-transform duration-500 ease-in-out ${
+      className={`fixed bottom-4 left-4 z-[100] max-w-[240px] md:max-w-[300px] bg-background border shadow-lg rounded-lg overflow-hidden transition-transform duration-500 ease-in-out ${
         visible ? 'translate-x-0' : '-translate-x-[120%]'
       }`}
     >
-      <div className="flex items-start gap-3 p-3">
+      <div className="flex items-start gap-2 md:gap-3 p-2 md:p-3">
         <img
           src={popup.imageUrl}
           alt={popup.product}
-          className="w-14 h-14 rounded-full object-cover flex-shrink-0 border"
+          className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover flex-shrink-0 border"
         />
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-foreground truncate">{popup.name} from {popup.city}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5 truncate">purchased <strong>{popup.product}</strong></p>
-          <p className="text-[10px] text-muted-foreground/70 mt-1">{popup.timeAgo}</p>
+          <p className="text-[10px] md:text-xs font-semibold text-foreground truncate">{popup.name} from {popup.city}</p>
+          <p className="text-[9px] md:text-[11px] text-muted-foreground mt-0.5 truncate">purchased <strong>{popup.product}</strong></p>
+          <p className="text-[8px] md:text-[10px] text-muted-foreground/70 mt-0.5 md:mt-1">{popup.timeAgo}</p>
         </div>
         <button onClick={() => setVisible(false)} className="text-muted-foreground hover:text-foreground p-0.5">
           <X className="w-3 h-3" />

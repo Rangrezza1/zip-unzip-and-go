@@ -1,9 +1,14 @@
 import { useThemeStore } from '@/stores/themeStore';
+import { useLocation } from 'react-router-dom';
 
 const WhatsAppWidget = () => {
   const settings = useThemeStore(s => s.theme.whatsapp);
+  const location = useLocation();
 
-  if (!settings.enabled || !settings.phoneNumber) return null;
+  // Hide on product pages (product page has its own WhatsApp button)
+  const isProductPage = location.pathname.startsWith('/product/');
+
+  if (!settings.enabled || !settings.phoneNumber || isProductPage) return null;
 
   const url = `https://wa.me/${settings.phoneNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(settings.message)}`;
 

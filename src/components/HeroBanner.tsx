@@ -63,6 +63,9 @@ const HeroBanner = () => {
                 src={banner.imageUrl}
                 alt={banner.title}
                 className="w-full h-[250px] sm:h-[350px] md:h-[450px] lg:h-[550px] xl:h-[650px] object-cover"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
               />
               {(banner.title || banner.subtitle || banner.ctaText) && (
                 <div className="absolute inset-0 flex items-center justify-center">
