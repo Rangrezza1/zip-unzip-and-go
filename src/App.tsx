@@ -11,6 +11,7 @@ import CollectionPage from "./pages/CollectionPage";
 import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 import RecentSalesPopup from "./components/widgets/RecentSalesPopup";
+import WhatsAppWidget from "./components/WhatsAppWidget";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const AppContent = () => {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <RecentSalesPopup />
+      <WhatsAppWidget />
     </BrowserRouter>
   );
 };
