@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useThemeStore, CollectionSectionSettings, SectionSettings, HeroBanner, FeaturedCollectionSection, CategoryItem, AnnouncementMessage, HeaderNavItem, ProductWidgets, ReviewsSectionSettings, BestSellingSettings, WhatsAppSettings } from '@/stores/themeStore';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
+import AdminLogin from '@/components/AdminLogin';
+import { saveThemeToCloud } from '@/hooks/useCloudTheme';
 import { useCollections } from '@/hooks/useCollections';
 import { ArrowLeft, Plus, Trash2, Copy, GripVertical, ChevronDown, ChevronUp, RotateCcw, Eye, Save, Download, Upload, Image } from 'lucide-react';
 import { toast } from 'sonner';
@@ -93,6 +96,21 @@ const ImageUploadField = ({ label, value, onChange }: { label: string; value: st
 };
 
 const AdminPage = () => {
+  const { user, isAdmin, loading: authLoading, signIn, signOut } = useAdminAuth();
+
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center"><p className="text-sm text-muted-foreground">Loading...</p></div>;
+  if (!user) return <AdminLogin onLogin={signIn} />;
+  if (!isAdmin) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <p className="text-sm text-muted-foreground">You don't have admin access.</p>
+      <button onClick={signOut} className="text-xs text-primary underline">Sign Out</button>
+    </div>
+  );
+
+  return <AdminDashboard onSignOut={signOut} />;
+};
+
+const AdminDashboard = ({ onSignOut }: { onSignOut: () => void }) => {
   const store = useThemeStore();
   const { theme, updateTheme, updateSection, removeSection, duplicateSection, addHeroBanner, updateHeroBanner, removeHeroBanner, updateFeaturedCollection, removeFeaturedCollection, reorderFeaturedCollections, syncFeaturedCollections, updateCategoryItem, removeCategoryItem, reorderCategoryItems, syncCategoryItems, addAnnouncementMessage, updateAnnouncementMessage, removeAnnouncementMessage, syncHeaderNav, updateHeaderNavItem, reorderHeaderNavItems, exportSettings, importSettings, resetTheme } = store;
   const { data: collections } = useCollections();
@@ -165,9 +183,10 @@ const AdminPage = () => {
     reorderHeaderNavItems(items);
   };
 
-  const handleSaveSettings = () => {
-    // Settings auto-save via zustand persist, but show confirmation
-    toast.success('Settings saved successfully!', { description: 'All changes are persisted in local storage.' });
+  const handleSaveSettings = async () => {
+    const success = await saveThemeToCloud();
+    if (success) toast.success('Settings saved to cloud!');
+    else toast.error('Failed to save. Are you logged in as admin?');
   };
 
   const handleExportSettings = () => {
@@ -223,6 +242,9 @@ const AdminPage = () => {
             </a>
             <button onClick={() => { resetTheme(); toast.success('Theme reset to defaults'); }} className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-medium px-3 py-1.5 border border-background/30 rounded hover:bg-background/10 transition-colors">
               <RotateCcw className="w-3.5 h-3.5" /> Reset
+            </button>
+            <button onClick={onSignOut} className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-medium px-3 py-1.5 border border-red-400/60 text-red-300 rounded hover:bg-red-500/20 transition-colors">
+              Logout
             </button>
           </div>
         </div>

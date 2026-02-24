@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useCartSync } from "@/hooks/useCartSync";
 import { useThemeCSS } from "@/hooks/useThemeCSS";
+import { useCloudTheme } from "@/hooks/useCloudTheme";
 import Index from "./pages/Index";
 import ProductPage from "./pages/ProductPage";
 import CollectionPage from "./pages/CollectionPage";
@@ -18,6 +19,7 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   useCartSync();
   useThemeCSS();
+  useCloudTheme();
   return (
     <BrowserRouter>
       <Routes>

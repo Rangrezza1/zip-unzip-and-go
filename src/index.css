@@ -242,3 +242,14 @@ html {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+.animate-bounce-slow:hover {
+  animation: none;
+}
