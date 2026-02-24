@@ -224,21 +224,24 @@ const ProductPage = () => {
         </div>
         <ProductReviewSection productHandle={handle || ''} productTitle={product.title} />
       </main>
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t px-4 py-2.5 flex items-center gap-2 md:hidden z-50">
-        <div className="flex-shrink-0">
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t px-3 py-2 md:hidden z-50">
+        <div className="flex items-center gap-1.5 mb-1.5">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Price</p>
           <p className="font-bold text-sm">{price && formatPrice(price.amount, price.currencyCode)}</p>
         </div>
-        <button onClick={handleAddToCart} disabled={cartLoading || !selectedVariant?.availableForSale} className="flex-1 cta-button flex items-center justify-center gap-2 disabled:opacity-50 py-3">
-          {cartLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add to Cart'}
-        </button>
-        {whatsapp.enabled && whatsapp.phoneNumber ? (
-          <button onClick={handleWhatsApp} className="flex-shrink-0 w-11 h-11 rounded-full bg-[#25D366] text-white flex items-center justify-center active:scale-95">
-            <MessageCircle className="w-5 h-5" />
+        <div className="flex gap-1.5">
+          <button onClick={handleAddToCart} disabled={cartLoading || !selectedVariant?.availableForSale} className="flex-1 cta-button flex items-center justify-center gap-1 disabled:opacity-50 py-2 text-[10px]">
+            {cartLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Add to Cart'}
           </button>
-        ) : (
-          <button onClick={handleBuyNow} disabled={cartLoading || !selectedVariant?.availableForSale} className="flex-1 cta-button-outline flex items-center justify-center py-3 text-xs">Buy Now</button>
-        )}
+          <button onClick={handleBuyNow} disabled={cartLoading || !selectedVariant?.availableForSale} className="flex-1 cta-button-outline flex items-center justify-center py-2 text-[10px] disabled:opacity-50">
+            Buy Now
+          </button>
+          {whatsapp.enabled && whatsapp.phoneNumber && (
+            <button onClick={handleWhatsApp} className="flex-1 flex items-center justify-center gap-1 py-2 text-[10px] font-semibold uppercase tracking-wider border border-[#25D366] text-[#25D366] active:scale-95 transition-transform">
+              <MessageCircle className="w-3 h-3" /> WhatsApp
+            </button>
+          )}
+        </div>
       </div>
       <Footer />
     </>
