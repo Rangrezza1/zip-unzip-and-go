@@ -25,6 +25,8 @@ const PAKISTAN_CUSTOMERS = [
   { name: 'Alina V.', city: 'Mirpur' },
 ];
 
+const defaults = { enabled: true, productNames: [] as string[], productImageUrl: '', displayDuration: 4, initialDelay: 3, repeatInterval: 10, collectionHandle: '' };
+
 interface PopupData {
   name: string;
   city: string;
@@ -34,7 +36,8 @@ interface PopupData {
 }
 
 const RecentSalesPopup = () => {
-  const { recentSales } = useThemeStore(s => s.theme.productWidgets);
+  const pw = useThemeStore(s => s.theme.productWidgets);
+  const recentSales = pw?.recentSales ?? defaults;
   const [popup, setPopup] = useState<PopupData | null>(null);
   const [visible, setVisible] = useState(false);
 
