@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from "react-router-dom";
 import { useCartSync } from "@/hooks/useCartSync";
 import { useThemeCSS } from "@/hooks/useThemeCSS";
 import { useCloudTheme } from "@/hooks/useCloudTheme";
@@ -16,6 +16,16 @@ import WhatsAppWidget from "./components/WhatsAppWidget";
 
 const queryClient = new QueryClient();
 
+// Handle SPA redirect from 404.html
+const SpaRedirect = () => {
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect');
+  if (redirect) {
+    return <Navigate to={decodeURIComponent(redirect)} replace />;
+  }
+  return <Index />;
+};
+
 const AppContent = () => {
   useCartSync();
   useThemeCSS();
@@ -23,7 +33,7 @@ const AppContent = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Index />} />
+        <Route path="/" element={<SpaRedirect />} />
         <Route path="/product/:handle" element={<ProductPage />} />
         <Route path="/collections" element={<CollectionPage />} />
         <Route path="/collections/:collection" element={<CollectionPage />} />
