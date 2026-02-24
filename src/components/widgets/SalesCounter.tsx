@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { Flame } from 'lucide-react';
 import { useThemeStore } from '@/stores/themeStore';
 
+const defaults = { enabled: true, minSales: 15, maxSales: 40, minHours: 10, maxHours: 24 };
+
 const SalesCounter = () => {
-  const { salesCounter } = useThemeStore(s => s.theme.productWidgets);
+  const pw = useThemeStore(s => s.theme.productWidgets);
+  const salesCounter = pw?.salesCounter ?? defaults;
   const [sold, setSold] = useState(0);
   const [hours, setHours] = useState(0);
 

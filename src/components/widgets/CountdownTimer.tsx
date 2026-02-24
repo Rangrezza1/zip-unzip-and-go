@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { Timer } from 'lucide-react';
 import { useThemeStore } from '@/stores/themeStore';
 
+const defaults = { enabled: true, label: 'Hurry! Offer ends in', hours: 1, minutes: 24, seconds: 48, resetHours: 1, resetMinutes: 30, resetSeconds: 60 };
+
 const CountdownTimer = () => {
-  const { countdown } = useThemeStore(s => s.theme.productWidgets);
+  const pw = useThemeStore(s => s.theme.productWidgets);
+  const countdown = pw?.countdown ?? defaults;
   const [timeLeft, setTimeLeft] = useState(
     countdown.hours * 3600 + countdown.minutes * 60 + countdown.seconds
   );

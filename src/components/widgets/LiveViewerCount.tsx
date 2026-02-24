@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { Eye } from 'lucide-react';
 import { useThemeStore } from '@/stores/themeStore';
 
+const defaults = { enabled: true, minViewers: 20, maxViewers: 75, fluctuation: 5, intervalSeconds: 8 };
+
 const LiveViewerCount = () => {
-  const { liveViewers } = useThemeStore(s => s.theme.productWidgets);
+  const pw = useThemeStore(s => s.theme.productWidgets);
+  const liveViewers = pw?.liveViewers ?? defaults;
   const [count, setCount] = useState(0);
 
   useEffect(() => {

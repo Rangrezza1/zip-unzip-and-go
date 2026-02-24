@@ -439,6 +439,23 @@ export const useThemeStore = create<ThemeStore>()(
 
       resetTheme: () => set({ theme: defaultTheme }),
     }),
-    { name: 'theme-settings', storage: createJSONStorage(() => localStorage) }
+    {
+      name: 'theme-settings',
+      storage: createJSONStorage(() => localStorage),
+      merge: (persisted, current) => {
+        const persistedState = persisted as { theme?: Partial<ThemeSettings> } | undefined;
+        return {
+          ...current,
+          theme: {
+            ...defaultTheme,
+            ...(persistedState?.theme || {}),
+            productWidgets: {
+              ...defaultTheme.productWidgets,
+              ...(persistedState?.theme?.productWidgets || {}),
+            },
+          },
+        } as ThemeStore;
+      },
+    }
   )
 );
