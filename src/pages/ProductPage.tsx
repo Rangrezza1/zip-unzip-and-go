@@ -225,9 +225,15 @@ const ProductPage = () => {
         <ProductReviewSection productHandle={handle || ''} productTitle={product.title} />
       </main>
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t px-3 py-2 md:hidden z-50">
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Price</p>
-          <p className="font-bold text-sm">{price && formatPrice(price.amount, price.currencyCode)}</p>
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Price</p>
+            <p className="font-bold text-sm">{price && formatPrice(price.amount, price.currencyCode)}</p>
+            {compareAtPrice && discount && <p className="text-[10px] text-muted-foreground line-through">{formatPrice(compareAtPrice.amount, compareAtPrice.currencyCode)}</p>}
+          </div>
+          {discount && (
+            <span className="text-[10px] font-bold text-white bg-destructive px-2 py-0.5 rounded">SAVE {discount}%</span>
+          )}
         </div>
         <div className="flex gap-1.5 mb-1.5">
           <button onClick={handleAddToCart} disabled={cartLoading || !selectedVariant?.availableForSale} className="flex-1 cta-button flex items-center justify-center gap-1 disabled:opacity-50 py-1.5 text-[9px]">
