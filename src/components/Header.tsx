@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Search, Menu, ShoppingBag } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { useCartStore } from '@/stores/cartStore';
+import { useThemeStore } from '@/stores/themeStore';
 import { useCollections } from '@/hooks/useCollections';
 import MobileMenu from './MobileMenu';
 import SearchOverlay from './SearchOverlay';
@@ -13,6 +14,11 @@ const Header = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const totalItems = useCartStore(state => state.items.reduce((sum, i) => sum + i.quantity, 0));
   const { data: collections } = useCollections();
+  const headerNavItems = useThemeStore((s) => s.theme.headerNavItems);
+
+  // Use theme nav items if configured, otherwise fall back to collections
+  const hasCustomNav = headerNavItems.length > 0;
+  const enabledNavItems = headerNavItems.filter((n) => n.enabled);
 
   return (
     <>
@@ -55,21 +61,35 @@ const Header = () => {
         </div>
 
         <nav className="hidden md:flex items-center justify-center gap-6 border-t py-2">
-          <a href="/" className="text-xs font-medium tracking-[0.15em] uppercase hover:text-primary transition-colors whitespace-nowrap">
-            Home
-          </a>
-          {collections?.map(col => (
-            <a
-              key={col.handle}
-              href={`/collections/${col.handle}`}
-              className="text-xs font-medium tracking-[0.15em] uppercase hover:text-primary transition-colors whitespace-nowrap"
-            >
-              {col.title}
-            </a>
-          ))}
-          <a href="/collections" className="text-xs font-medium tracking-[0.15em] uppercase hover:text-primary transition-colors whitespace-nowrap">
-            Shop All
-          </a>
+          {hasCustomNav ? (
+            enabledNavItems.map(item => (
+              <a
+                key={item.id}
+                href={item.link}
+                className="text-xs font-medium tracking-[0.15em] uppercase hover:text-primary transition-colors whitespace-nowrap"
+              >
+                {item.label}
+              </a>
+            ))
+          ) : (
+            <>
+              <a href="/" className="text-xs font-medium tracking-[0.15em] uppercase hover:text-primary transition-colors whitespace-nowrap">
+                Home
+              </a>
+              {collections?.map(col => (
+                <a
+                  key={col.handle}
+                  href={`/collections/${col.handle}`}
+                  className="text-xs font-medium tracking-[0.15em] uppercase hover:text-primary transition-colors whitespace-nowrap"
+                >
+                  {col.title}
+                </a>
+              ))}
+              <a href="/collections" className="text-xs font-medium tracking-[0.15em] uppercase hover:text-primary transition-colors whitespace-nowrap">
+                Shop All
+              </a>
+            </>
+          )}
         </nav>
       </header>
 
