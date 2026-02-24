@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useThemeStore, CollectionSectionSettings, SectionSettings, HeroBanner, FeaturedCollectionSection, CategoryItem, AnnouncementMessage, HeaderNavItem } from '@/stores/themeStore';
+import { useThemeStore, CollectionSectionSettings, SectionSettings, HeroBanner, FeaturedCollectionSection, CategoryItem, AnnouncementMessage, HeaderNavItem, ProductWidgets } from '@/stores/themeStore';
 import { useCollections } from '@/hooks/useCollections';
 import { ArrowLeft, Plus, Trash2, Copy, GripVertical, ChevronDown, ChevronUp, RotateCcw, Eye, Save, Download, Upload, Image } from 'lucide-react';
 import { toast } from 'sonner';
@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 const FONT_OPTIONS = ['DM Sans', 'Inter', 'Poppins', 'Playfair Display', 'Lora', 'Montserrat', 'Roboto', 'Open Sans'];
 const HEADING_WEIGHTS = ['400', '500', '600', '700', '800'];
 
-type Tab = 'global' | 'announcement' | 'header' | 'hero' | 'categories' | 'sections' | 'featured';
+type Tab = 'global' | 'announcement' | 'header' | 'hero' | 'categories' | 'sections' | 'featured' | 'widgets';
 
 const ColorInput = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => {
   const hslToHex = (hsl: string) => {
@@ -110,6 +110,7 @@ const AdminPage = () => {
     { key: 'categories', label: 'Categories' },
     { key: 'sections', label: 'Sections' },
     { key: 'featured', label: 'Featured' },
+    { key: 'widgets', label: 'Widgets' },
   ];
 
   const moveCategory = (index: number, direction: 'up' | 'down') => {
@@ -477,6 +478,117 @@ const AdminPage = () => {
             ))}
           </div>
         )}
+
+        {/* WIDGETS TAB */}
+        {activeTab === 'widgets' && (
+          <WidgetsTab />
+        )}
+      </div>
+    </div>
+  );
+};
+
+const WidgetsTab = () => {
+  const { theme, updateTheme } = useThemeStore();
+  const { data: collections } = useCollections();
+  const w = theme.productWidgets;
+
+  const updateWidget = <K extends keyof ProductWidgets>(key: K, partial: Partial<ProductWidgets[K]>) => {
+    updateTheme({ productWidgets: { ...w, [key]: { ...w[key], ...partial } } });
+  };
+
+  const [newProduct, setNewProduct] = useState('');
+
+  return (
+    <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
+      {/* Sales Counter */}
+      <div className="bg-card border rounded-lg p-5 space-y-4">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">🔥 Sales Counter</h3>
+          <ToggleSwitch label="" checked={w.salesCounter.enabled} onChange={(v) => updateWidget('salesCounter', { enabled: v })} />
+        </div>
+        <NumberInput label="Min Sales" value={w.salesCounter.minSales} onChange={(v) => updateWidget('salesCounter', { minSales: v })} min={1} max={100} />
+        <NumberInput label="Max Sales" value={w.salesCounter.maxSales} onChange={(v) => updateWidget('salesCounter', { maxSales: v })} min={1} max={200} />
+        <NumberInput label="Min Hours" value={w.salesCounter.minHours} onChange={(v) => updateWidget('salesCounter', { minHours: v })} min={1} max={48} />
+        <NumberInput label="Max Hours" value={w.salesCounter.maxHours} onChange={(v) => updateWidget('salesCounter', { maxHours: v })} min={1} max={48} />
+      </div>
+
+      {/* Live Viewers */}
+      <div className="bg-card border rounded-lg p-5 space-y-4">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">👁 Live Viewers</h3>
+          <ToggleSwitch label="" checked={w.liveViewers.enabled} onChange={(v) => updateWidget('liveViewers', { enabled: v })} />
+        </div>
+        <NumberInput label="Min Viewers" value={w.liveViewers.minViewers} onChange={(v) => updateWidget('liveViewers', { minViewers: v })} min={1} max={200} />
+        <NumberInput label="Max Viewers" value={w.liveViewers.maxViewers} onChange={(v) => updateWidget('liveViewers', { maxViewers: v })} min={1} max={500} />
+        <NumberInput label="Fluctuation (±)" value={w.liveViewers.fluctuation} onChange={(v) => updateWidget('liveViewers', { fluctuation: v })} min={1} max={20} />
+        <NumberInput label="Update Interval (sec)" value={w.liveViewers.intervalSeconds} onChange={(v) => updateWidget('liveViewers', { intervalSeconds: v })} min={3} max={30} />
+      </div>
+
+      {/* Countdown Timer */}
+      <div className="bg-card border rounded-lg p-5 space-y-4">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">⏱ Countdown Timer</h3>
+          <ToggleSwitch label="" checked={w.countdown.enabled} onChange={(v) => updateWidget('countdown', { enabled: v })} />
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <label className="text-xs font-medium whitespace-nowrap">Label</label>
+          <input type="text" value={w.countdown.label} onChange={(e) => updateWidget('countdown', { label: e.target.value })} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" />
+        </div>
+        <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pt-1">Start Time</h4>
+        <div className="grid grid-cols-3 gap-2">
+          <NumberInput label="Hrs" value={w.countdown.hours} onChange={(v) => updateWidget('countdown', { hours: v })} min={0} max={23} />
+          <NumberInput label="Min" value={w.countdown.minutes} onChange={(v) => updateWidget('countdown', { minutes: v })} min={0} max={59} />
+          <NumberInput label="Sec" value={w.countdown.seconds} onChange={(v) => updateWidget('countdown', { seconds: v })} min={0} max={59} />
+        </div>
+        <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pt-1">Reset Time</h4>
+        <div className="grid grid-cols-3 gap-2">
+          <NumberInput label="Hrs" value={w.countdown.resetHours} onChange={(v) => updateWidget('countdown', { resetHours: v })} min={0} max={23} />
+          <NumberInput label="Min" value={w.countdown.resetMinutes} onChange={(v) => updateWidget('countdown', { resetMinutes: v })} min={0} max={59} />
+          <NumberInput label="Sec" value={w.countdown.resetSeconds} onChange={(v) => updateWidget('countdown', { resetSeconds: v })} min={0} max={59} />
+        </div>
+      </div>
+
+      {/* Recent Sales Popup */}
+      <div className="bg-card border rounded-lg p-5 space-y-4">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">🛒 Recent Sales Popup</h3>
+          <ToggleSwitch label="" checked={w.recentSales.enabled} onChange={(v) => updateWidget('recentSales', { enabled: v })} />
+        </div>
+        <NumberInput label="Display Duration (sec)" value={w.recentSales.displayDuration} onChange={(v) => updateWidget('recentSales', { displayDuration: v })} min={2} max={15} />
+        <NumberInput label="Initial Delay (sec)" value={w.recentSales.initialDelay} onChange={(v) => updateWidget('recentSales', { initialDelay: v })} min={1} max={30} />
+        <NumberInput label="Repeat Interval (sec)" value={w.recentSales.repeatInterval} onChange={(v) => updateWidget('recentSales', { repeatInterval: v })} min={5} max={60} />
+        <ImageUploadField label="Product Image" value={w.recentSales.productImageUrl} onChange={(v) => updateWidget('recentSales', { productImageUrl: v })} />
+
+        {collections && collections.length > 0 && (
+          <SelectInput
+            label="Collection"
+            value={w.recentSales.collectionHandle}
+            options={[{ label: 'None', value: '' }, ...collections.map((c: { handle: string; title: string }) => ({ label: c.title, value: c.handle }))]}
+            onChange={(v) => updateWidget('recentSales', { collectionHandle: v })}
+          />
+        )}
+
+        <div className="space-y-2 pt-1">
+          <label className="text-xs font-medium">Product Names</label>
+          <div className="flex flex-wrap gap-1.5">
+            {w.recentSales.productNames.map((name, i) => (
+              <span key={i} className="flex items-center gap-1 text-[11px] bg-secondary px-2 py-1 rounded">
+                {name}
+                <button onClick={() => updateWidget('recentSales', { productNames: w.recentSales.productNames.filter((_, j) => j !== i) })} className="text-muted-foreground hover:text-destructive">×</button>
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input type="text" value={newProduct} onChange={(e) => setNewProduct(e.target.value)} placeholder="Product name" className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" onKeyDown={(e) => {
+              if (e.key === 'Enter' && newProduct.trim()) {
+                updateWidget('recentSales', { productNames: [...w.recentSales.productNames, newProduct.trim()] });
+                setNewProduct('');
+              }
+            }} />
+            <button onClick={() => { if (newProduct.trim()) { updateWidget('recentSales', { productNames: [...w.recentSales.productNames, newProduct.trim()] }); setNewProduct(''); } }} className="text-xs font-semibold text-primary hover:text-primary/80">Add</button>
+          </div>
+        </div>
       </div>
     </div>
   );

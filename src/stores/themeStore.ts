@@ -87,6 +87,50 @@ export interface CategoryCarouselSettings {
   roundedImages: boolean;
 }
 
+export interface SalesCounterSettings {
+  enabled: boolean;
+  minSales: number;
+  maxSales: number;
+  minHours: number;
+  maxHours: number;
+}
+
+export interface LiveViewersSettings {
+  enabled: boolean;
+  minViewers: number;
+  maxViewers: number;
+  fluctuation: number;
+  intervalSeconds: number;
+}
+
+export interface RecentSalesSettings {
+  enabled: boolean;
+  productNames: string[];
+  productImageUrl: string;
+  displayDuration: number;
+  initialDelay: number;
+  repeatInterval: number;
+  collectionHandle: string;
+}
+
+export interface CountdownSettings {
+  enabled: boolean;
+  label: string;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  resetHours: number;
+  resetMinutes: number;
+  resetSeconds: number;
+}
+
+export interface ProductWidgets {
+  salesCounter: SalesCounterSettings;
+  liveViewers: LiveViewersSettings;
+  recentSales: RecentSalesSettings;
+  countdown: CountdownSettings;
+}
+
 export interface ThemeSettings {
   // Announcement bar
   announcementMessages: AnnouncementMessage[];
@@ -126,6 +170,7 @@ export interface ThemeSettings {
   sections: SectionSettings[];
   collectionSections: CollectionSectionSettings[];
   featuredCollections: FeaturedCollectionSection[];
+  productWidgets: ProductWidgets;
 }
 
 const defaultSections: SectionSettings[] = [
@@ -182,6 +227,12 @@ const defaultTheme: ThemeSettings = {
   sections: defaultSections,
   collectionSections: [],
   featuredCollections: [],
+  productWidgets: {
+    salesCounter: { enabled: true, minSales: 15, maxSales: 40, minHours: 10, maxHours: 24 },
+    liveViewers: { enabled: true, minViewers: 20, maxViewers: 75, fluctuation: 5, intervalSeconds: 8 },
+    recentSales: { enabled: true, productNames: [], productImageUrl: '', displayDuration: 4, initialDelay: 3, repeatInterval: 10, collectionHandle: '' },
+    countdown: { enabled: true, label: 'Hurry! Offer ends in', hours: 1, minutes: 24, seconds: 48, resetHours: 1, resetMinutes: 30, resetSeconds: 60 },
+  },
 };
 
 interface ThemeStore {

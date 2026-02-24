@@ -9,6 +9,10 @@ import Header from '@/components/Header';
 import AnnouncementBar from '@/components/AnnouncementBar';
 import Footer from '@/components/Footer';
 import useEmblaCarousel from 'embla-carousel-react';
+import SalesCounter from '@/components/widgets/SalesCounter';
+import LiveViewerCount from '@/components/widgets/LiveViewerCount';
+import RecentSalesPopup from '@/components/widgets/RecentSalesPopup';
+import CountdownTimer from '@/components/widgets/CountdownTimer';
 
 const ProductPage = () => {
   const { handle } = useParams<{ handle: string }>();
@@ -147,12 +151,14 @@ const ProductPage = () => {
                   {badges.map(badge => <span key={badge.label} className={getBadgeClass(badge.type)}>{badge.label}</span>)}
                 </div>
               )}
-              <h1 className="font-display text-xl md:text-2xl font-bold mb-2 leading-tight">{product.title}</h1>
-              <div className="flex items-center gap-2 mb-5">
+              <SalesCounter />
+              <h1 className="font-display text-xl md:text-2xl font-bold mb-2 leading-tight mt-2">{product.title}</h1>
+              <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg font-bold text-foreground">{price && formatPrice(price.amount, price.currencyCode)}</span>
                 {compareAtPrice && discount && <span className="price-compare text-sm">{formatPrice(compareAtPrice.amount, compareAtPrice.currencyCode)}</span>}
                 {discount && <span className="text-xs font-bold text-destructive bg-destructive/10 px-1.5 py-0.5">SAVE {discount}%</span>}
               </div>
+              <LiveViewerCount />
               {options.filter((o: { name: string; values: string[] }) => o.name !== 'Title' || o.values.length > 1).map((option: { name: string; values: string[] }) => (
                 <div key={option.name} className="mb-4">
                   <label className="text-xs font-bold tracking-[0.15em] uppercase mb-2 block">{option.name}: <span className="font-normal text-muted-foreground">{currentOpts[option.name]}</span></label>
@@ -179,6 +185,7 @@ const ProductPage = () => {
                   <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"><Plus className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
+              <CountdownTimer />
               <div className="hidden md:flex flex-col gap-2.5 mb-6">
                 <button onClick={handleAddToCart} disabled={cartLoading || !selectedVariant?.availableForSale} className="cta-button w-full flex items-center justify-center gap-2 disabled:opacity-50">
                   {cartLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add to Cart'}
@@ -213,6 +220,7 @@ const ProductPage = () => {
         </button>
         <button onClick={handleBuyNow} disabled={cartLoading || !selectedVariant?.availableForSale} className="flex-1 cta-button-outline flex items-center justify-center py-3 text-xs">Buy Now</button>
       </div>
+      <RecentSalesPopup />
       <Footer />
     </>
   );
