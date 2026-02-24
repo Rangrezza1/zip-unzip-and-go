@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useThemeStore, CollectionSectionSettings, SectionSettings, HeroBanner, FeaturedCollectionSection, CategoryItem, AnnouncementMessage, HeaderNavItem, ProductWidgets } from '@/stores/themeStore';
+import { useThemeStore, CollectionSectionSettings, SectionSettings, HeroBanner, FeaturedCollectionSection, CategoryItem, AnnouncementMessage, HeaderNavItem, ProductWidgets, ReviewsSectionSettings, BestSellingSettings, WhatsAppSettings } from '@/stores/themeStore';
 import { useCollections } from '@/hooks/useCollections';
 import { ArrowLeft, Plus, Trash2, Copy, GripVertical, ChevronDown, ChevronUp, RotateCcw, Eye, Save, Download, Upload, Image } from 'lucide-react';
 import { toast } from 'sonner';
@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 const FONT_OPTIONS = ['DM Sans', 'Inter', 'Poppins', 'Playfair Display', 'Lora', 'Montserrat', 'Roboto', 'Open Sans'];
 const HEADING_WEIGHTS = ['400', '500', '600', '700', '800'];
 
-type Tab = 'global' | 'announcement' | 'header' | 'hero' | 'categories' | 'sections' | 'featured' | 'widgets';
+type Tab = 'global' | 'announcement' | 'header' | 'hero' | 'categories' | 'sections' | 'featured' | 'widgets' | 'whatsapp' | 'bestselling' | 'reviews';
 
 const ColorInput = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => {
   const hslToHex = (hsl: string) => {
@@ -111,6 +111,9 @@ const AdminPage = () => {
     { key: 'sections', label: 'Sections' },
     { key: 'featured', label: 'Featured' },
     { key: 'widgets', label: 'Widgets' },
+    { key: 'whatsapp', label: 'WhatsApp' },
+    { key: 'bestselling', label: 'Best Selling' },
+    { key: 'reviews', label: 'Reviews' },
   ];
 
   const moveCategory = (index: number, direction: 'up' | 'down') => {
@@ -483,6 +486,21 @@ const AdminPage = () => {
         {activeTab === 'widgets' && (
           <WidgetsTab />
         )}
+
+        {/* WHATSAPP TAB */}
+        {activeTab === 'whatsapp' && (
+          <WhatsAppTab />
+        )}
+
+        {/* BEST SELLING TAB */}
+        {activeTab === 'bestselling' && (
+          <BestSellingTab />
+        )}
+
+        {/* REVIEWS TAB */}
+        {activeTab === 'reviews' && (
+          <ReviewsAdminTab />
+        )}
       </div>
     </div>
   );
@@ -589,6 +607,182 @@ const WidgetsTab = () => {
             <button onClick={() => { if (newProduct.trim()) { updateWidget('recentSales', { productNames: [...w.recentSales.productNames, newProduct.trim()] }); setNewProduct(''); } }} className="text-xs font-semibold text-primary hover:text-primary/80">Add</button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+const WhatsAppTab = () => {
+  const { theme, updateTheme } = useThemeStore();
+  const wa = theme.whatsapp ?? { enabled: true, phoneNumber: '', message: 'Hi! I want to order this product:' };
+
+  return (
+    <div className="space-y-4 max-w-2xl">
+      <div className="bg-card border rounded-lg p-5 space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">WhatsApp Order Button</h3>
+        <ToggleSwitch label="Enable WhatsApp Button" checked={wa.enabled} onChange={(v) => updateTheme({ whatsapp: { ...wa, enabled: v } })} />
+        <div className="flex items-center justify-between gap-3">
+          <label className="text-xs font-medium whitespace-nowrap">Phone Number</label>
+          <input type="text" value={wa.phoneNumber} onChange={(e) => updateTheme({ whatsapp: { ...wa, phoneNumber: e.target.value } })} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" placeholder="923001234567 (with country code)" />
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <label className="text-xs font-medium whitespace-nowrap">Default Message</label>
+          <input type="text" value={wa.message} onChange={(e) => updateTheme({ whatsapp: { ...wa, message: e.target.value } })} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const BestSellingTab = () => {
+  const { theme, updateTheme } = useThemeStore();
+  const { data: collections } = useCollections();
+  const bs = theme.bestSelling ?? { enabled: true, collectionHandle: '', headline: 'Best Sellers', productLimit: 10 };
+
+  return (
+    <div className="space-y-4 max-w-2xl">
+      <div className="bg-card border rounded-lg p-5 space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Best Selling Carousel</h3>
+        <ToggleSwitch label="Enable" checked={bs.enabled} onChange={(v) => updateTheme({ bestSelling: { ...bs, enabled: v } })} />
+        <div className="flex items-center justify-between gap-3">
+          <label className="text-xs font-medium whitespace-nowrap">Headline</label>
+          <input type="text" value={bs.headline} onChange={(e) => updateTheme({ bestSelling: { ...bs, headline: e.target.value } })} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" />
+        </div>
+        <NumberInput label="Product Limit" value={bs.productLimit} onChange={(v) => updateTheme({ bestSelling: { ...bs, productLimit: v } })} min={4} max={20} />
+        {collections && collections.length > 0 && (
+          <SelectInput
+            label="Collection"
+            value={bs.collectionHandle}
+            options={[{ label: 'Select Collection', value: '' }, ...collections.map((c: { handle: string; title: string }) => ({ label: c.title, value: c.handle }))]}
+            onChange={(v) => updateTheme({ bestSelling: { ...bs, collectionHandle: v } })}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+const ReviewsAdminTab = () => {
+  const { theme, updateTheme } = useThemeStore();
+  const rs = theme.reviewsSection ?? { enabled: true, headline: 'What Our Customers Say', displayCount: 10 };
+
+  // Admin review management
+  const [reviews, setReviews] = useState<Array<{ id: string; product_handle: string; product_title: string; reviewer_name: string; rating: number; review_text: string; image_url: string | null; created_at: string }>>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
+  const loadReviews = async () => {
+    setLoadingReviews(true);
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data } = await supabase.from('reviews').select('*').order('created_at', { ascending: false }).limit(100);
+      setReviews(data || []);
+    } catch { /* ignore */ }
+    setLoadingReviews(false);
+  };
+
+  useEffect(() => { loadReviews(); }, []);
+
+  const deleteReview = async (id: string) => {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      await supabase.from('reviews').delete().eq('id', id);
+      setReviews(r => r.filter(rev => rev.id !== id));
+      toast.success('Review deleted');
+    } catch {
+      toast.error('Failed to delete review');
+    }
+  };
+
+  // Admin add review (no auth required)
+  const [newReview, setNewReview] = useState({ product_handle: '', product_title: '', reviewer_name: '', rating: 5, review_text: '' });
+  const [addingReview, setAddingReview] = useState(false);
+
+  const handleAdminAddReview = async () => {
+    if (!newReview.product_handle || !newReview.reviewer_name) { toast.error('Product handle and reviewer name required'); return; }
+    setAddingReview(true);
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      // Get current user or use service approach
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error('You must be signed in as admin to add reviews'); setAddingReview(false); return; }
+      await supabase.from('reviews').insert({
+        ...newReview,
+        user_id: user.id,
+      });
+      toast.success('Review added');
+      setNewReview({ product_handle: '', product_title: '', reviewer_name: '', rating: 5, review_text: '' });
+      loadReviews();
+    } catch (err) {
+      toast.error('Failed to add review');
+    }
+    setAddingReview(false);
+  };
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      <div className="bg-card border rounded-lg p-5 space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Reviews Section Settings</h3>
+        <ToggleSwitch label="Show on Homepage" checked={rs.enabled} onChange={(v) => updateTheme({ reviewsSection: { ...rs, enabled: v } })} />
+        <div className="flex items-center justify-between gap-3">
+          <label className="text-xs font-medium whitespace-nowrap">Headline</label>
+          <input type="text" value={rs.headline} onChange={(e) => updateTheme({ reviewsSection: { ...rs, headline: e.target.value } })} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" />
+        </div>
+        <NumberInput label="Display Count" value={rs.displayCount} onChange={(v) => updateTheme({ reviewsSection: { ...rs, displayCount: v } })} min={4} max={50} />
+      </div>
+
+      <div className="bg-card border rounded-lg p-5 space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Add Review (Admin)</h3>
+        <div className="grid gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-xs font-medium whitespace-nowrap">Product Handle</label>
+            <input type="text" value={newReview.product_handle} onChange={(e) => setNewReview(r => ({ ...r, product_handle: e.target.value }))} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" placeholder="e.g. my-product-slug" />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-xs font-medium whitespace-nowrap">Product Title</label>
+            <input type="text" value={newReview.product_title} onChange={(e) => setNewReview(r => ({ ...r, product_title: e.target.value }))} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" placeholder="Product name" />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-xs font-medium whitespace-nowrap">Reviewer Name</label>
+            <input type="text" value={newReview.reviewer_name} onChange={(e) => setNewReview(r => ({ ...r, reviewer_name: e.target.value }))} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" />
+          </div>
+          <NumberInput label="Rating (1-5)" value={newReview.rating} onChange={(v) => setNewReview(r => ({ ...r, rating: v }))} min={1} max={5} />
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-xs font-medium whitespace-nowrap">Review Text</label>
+            <input type="text" value={newReview.review_text} onChange={(e) => setNewReview(r => ({ ...r, review_text: e.target.value }))} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" />
+          </div>
+          <button onClick={handleAdminAddReview} disabled={addingReview} className="text-xs font-semibold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors">
+            {addingReview ? 'Adding...' : '+ Add Review'}
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-card border rounded-lg p-5 space-y-3">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">All Reviews ({reviews.length})</h3>
+          <button onClick={loadReviews} className="text-xs text-primary hover:text-primary/80">Refresh</button>
+        </div>
+        {loadingReviews ? (
+          <p className="text-xs text-muted-foreground text-center py-4">Loading...</p>
+        ) : reviews.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-4">No reviews yet</p>
+        ) : (
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {reviews.map(review => (
+              <div key={review.id} className="flex items-start gap-3 p-3 border rounded">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold">{review.reviewer_name}</span>
+                    <span className="text-amber-400 text-xs">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
+                  </div>
+                  <p className="text-[10px] text-primary">{review.product_title || review.product_handle}</p>
+                  {review.review_text && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{review.review_text}</p>}
+                </div>
+                <button onClick={() => deleteReview(review.id)} className="text-muted-foreground hover:text-destructive flex-shrink-0">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

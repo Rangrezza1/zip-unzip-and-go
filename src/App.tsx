@@ -10,6 +10,7 @@ import ProductPage from "./pages/ProductPage";
 import CollectionPage from "./pages/CollectionPage";
 import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
+import RecentSalesPopup from "./components/widgets/RecentSalesPopup";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const AppContent = () => {
         <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <RecentSalesPopup />
     </BrowserRouter>
   );
 };

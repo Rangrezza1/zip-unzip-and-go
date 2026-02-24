@@ -2,6 +2,7 @@ import { ShopifyProduct, formatPrice, getDiscountPercentage, getProductBadges, g
 import { useCartStore } from '@/stores/cartStore';
 import { ShoppingBag, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import ReviewCount from './ReviewCount';
 
 interface ProductCardProps {
   product: ShopifyProduct;
@@ -100,6 +101,7 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
       </div>
 
       <div className="px-1 py-2.5">
+        <ReviewCount productHandle={node.handle} />
         <h3 className="text-xs font-medium leading-tight line-clamp-2 mb-1">{node.title}</h3>
         <div className="flex items-center gap-1.5">
           <span className="price-current text-sm">
