@@ -89,34 +89,24 @@ const Footer = () => {
           </div>
 
           {/* Sections */}
-          {SECTIONS.map((section) => {}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          )}
+          {SECTIONS.map((section) => (
+            <div key={section.title} className="border-t border-cream/10 md:border-0 pt-4 md:pt-0">
+              <button
+                onClick={() => setOpenSection(openSection === section.title ? null : section.title)}
+                className="w-full flex items-center justify-between md:pointer-events-none mb-3"
+              >
+                <h4 className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary">{section.title}</h4>
+                <ChevronDown className={`w-4 h-4 text-cream/40 md:hidden transition-transform ${openSection === section.title ? 'rotate-180' : ''}`} />
+              </button>
+              <ul className={`space-y-2 text-xs text-cream/50 overflow-hidden transition-all md:max-h-96 ${openSection === section.title ? 'max-h-96' : 'max-h-0 md:max-h-96'}`}>
+                {section.links.map((link) => (
+                  <li key={link.label}>
+                    <a href={link.href} className="hover:text-cream transition-colors">{link.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
 
           {/* Contact Info */}
           <div className="border-t border-cream/10 md:border-0 pt-4 md:pt-0">
