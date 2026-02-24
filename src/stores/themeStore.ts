@@ -65,7 +65,41 @@ export interface CategoryItem {
   enabled: boolean;
 }
 
+export interface AnnouncementMessage {
+  id: string;
+  text: string;
+  emoji: string;
+  enabled: boolean;
+}
+
+export interface HeaderNavItem {
+  id: string;
+  label: string;
+  link: string;
+  enabled: boolean;
+}
+
+export interface CategoryCarouselSettings {
+  itemSize: 'small' | 'medium' | 'large';
+  autoScroll: boolean;
+  scrollSpeed: number;
+  showTitle: boolean;
+  roundedImages: boolean;
+}
+
 export interface ThemeSettings {
+  // Announcement bar
+  announcementMessages: AnnouncementMessage[];
+  announcementSticky: boolean;
+  announcementSpeed: number;
+  showCountdown: boolean;
+
+  // Header nav
+  headerNavItems: HeaderNavItem[];
+
+  // Category carousel
+  categoryCarousel: CategoryCarouselSettings;
+
   categoryItems: CategoryItem[];
   heroBanners: HeroBanner[];
   heroAutoRotate: boolean;
@@ -101,7 +135,25 @@ const defaultSections: SectionSettings[] = [
   { id: 'promo', type: 'promo', enabled: true, backgroundColor: '', backgroundImage: '', paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, textAlign: 'center', animationEnabled: true, decorativeStyle: 'none', settings: {} },
 ];
 
+const defaultAnnouncements: AnnouncementMessage[] = [
+  { id: 'a1', text: 'Fast Delivery & Easy Exchange Policy', emoji: '⚡', enabled: true },
+  { id: 'a2', text: 'All Payment Methods Accepted', emoji: '💳', enabled: true },
+  { id: 'a3', text: 'Free Shipping on Orders Above Rs. 3,000', emoji: '📦', enabled: true },
+];
+
 const defaultTheme: ThemeSettings = {
+  announcementMessages: defaultAnnouncements,
+  announcementSticky: false,
+  announcementSpeed: 20,
+  showCountdown: true,
+  headerNavItems: [],
+  categoryCarousel: {
+    itemSize: 'small',
+    autoScroll: false,
+    scrollSpeed: 3,
+    showTitle: true,
+    roundedImages: false,
+  },
   categoryItems: [],
   heroBanners: [
     { id: 'default-1', imageUrl: '', title: 'Upto 50% OFF', subtitle: 'Premium Lawn & Dhanak collections. Shop Now Before It\'s Gone!', ctaText: 'Shop Now', ctaLink: '/collections' },
@@ -155,6 +207,17 @@ interface ThemeStore {
   removeFeaturedCollection: (id: string) => void;
   reorderFeaturedCollections: (collections: FeaturedCollectionSection[]) => void;
   syncFeaturedCollections: (shopifyCollections: { handle: string; title: string }[]) => void;
+  // Announcement
+  addAnnouncementMessage: () => void;
+  updateAnnouncementMessage: (id: string, partial: Partial<AnnouncementMessage>) => void;
+  removeAnnouncementMessage: (id: string) => void;
+  // Header nav
+  syncHeaderNav: (collections: { handle: string; title: string }[]) => void;
+  updateHeaderNavItem: (id: string, partial: Partial<HeaderNavItem>) => void;
+  reorderHeaderNavItems: (items: HeaderNavItem[]) => void;
+  // Save/export
+  exportSettings: () => string;
+  importSettings: (json: string) => boolean;
   resetTheme: () => void;
 }
 
@@ -277,6 +340,50 @@ export const useThemeStore = create<ThemeStore>()(
         if (newCollections.length > 0) {
           set({ theme: { ...get().theme, featuredCollections: [...existing, ...newCollections] } });
         }
+      },
+
+      // Announcement
+      addAnnouncementMessage: () =>
+        set({ theme: { ...get().theme, announcementMessages: [...get().theme.announcementMessages, { id: `ann-${Date.now()}`, text: 'New announcement', emoji: '🔔', enabled: true }] } }),
+
+      updateAnnouncementMessage: (id, partial) =>
+        set({ theme: { ...get().theme, announcementMessages: get().theme.announcementMessages.map((m) => m.id === id ? { ...m, ...partial } : m) } }),
+
+      removeAnnouncementMessage: (id) =>
+        set({ theme: { ...get().theme, announcementMessages: get().theme.announcementMessages.filter((m) => m.id !== id) } }),
+
+      // Header nav
+      syncHeaderNav: (collections) => {
+        const existing = get().theme.headerNavItems;
+        if (existing.length > 0) return; // don't overwrite manual config
+        const items: HeaderNavItem[] = [
+          { id: 'nav-home', label: 'Home', link: '/', enabled: true },
+          ...collections.map(c => ({
+            id: `nav-${c.handle}`,
+            label: c.title,
+            link: `/collections/${c.handle}`,
+            enabled: true,
+          })),
+          { id: 'nav-shop-all', label: 'Shop All', link: '/collections', enabled: true },
+        ];
+        set({ theme: { ...get().theme, headerNavItems: items } });
+      },
+
+      updateHeaderNavItem: (id, partial) =>
+        set({ theme: { ...get().theme, headerNavItems: get().theme.headerNavItems.map((n) => n.id === id ? { ...n, ...partial } : n) } }),
+
+      reorderHeaderNavItems: (items) =>
+        set({ theme: { ...get().theme, headerNavItems: items } }),
+
+      // Save/export
+      exportSettings: () => JSON.stringify(get().theme, null, 2),
+
+      importSettings: (json: string) => {
+        try {
+          const parsed = JSON.parse(json);
+          set({ theme: { ...defaultTheme, ...parsed } });
+          return true;
+        } catch { return false; }
       },
 
       resetTheme: () => set({ theme: defaultTheme }),

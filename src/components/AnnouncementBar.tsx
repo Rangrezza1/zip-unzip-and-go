@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react';
+import { useThemeStore } from '@/stores/themeStore';
 
 const TARGET_DATE = new Date();
 TARGET_DATE.setDate(TARGET_DATE.getDate() + 3);
 
 const AnnouncementBar = () => {
+  const messages = useThemeStore((s) => s.theme.announcementMessages);
+  const speed = useThemeStore((s) => s.theme.announcementSpeed);
+  const showCountdown = useThemeStore((s) => s.theme.showCountdown);
+  const sticky = useThemeStore((s) => s.theme.announcementSticky);
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
+    if (!showCountdown) return;
     const tick = () => {
       const diff = TARGET_DATE.getTime() - Date.now();
       if (diff <= 0) return;
@@ -19,21 +25,30 @@ const AnnouncementBar = () => {
     tick();
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [showCountdown]);
 
   const pad = (n: number) => n.toString().padStart(2, '0');
 
+  const enabledMessages = messages.filter((m) => m.enabled);
+  if (enabledMessages.length === 0) return null;
+
+  const countdownText = `${pad(timeLeft.hours)}:${pad(timeLeft.minutes)}:${pad(timeLeft.seconds)}`;
+
+  // Duplicate for seamless marquee
+  const items = [...enabledMessages, ...enabledMessages];
+
   return (
-    <div className="announcement-bar overflow-hidden">
-      <div className="flex animate-marquee whitespace-nowrap">
-        <span className="mx-8">⚡ Fast Delivery &amp; Easy Exchange Policy</span>
-        <span className="mx-8">💳 All Payment Methods Accepted</span>
-        <span className="mx-8">🔥 Sale ends in {pad(timeLeft.hours)}:{pad(timeLeft.minutes)}:{pad(timeLeft.seconds)}</span>
-        <span className="mx-8">📦 Free Shipping on Orders Above Rs. 3,000</span>
-        <span className="mx-8">⚡ Fast Delivery &amp; Easy Exchange Policy</span>
-        <span className="mx-8">💳 All Payment Methods Accepted</span>
-        <span className="mx-8">🔥 Sale ends in {pad(timeLeft.hours)}:{pad(timeLeft.minutes)}:{pad(timeLeft.seconds)}</span>
-        <span className="mx-8">📦 Free Shipping on Orders Above Rs. 3,000</span>
+    <div className={`announcement-bar overflow-hidden ${sticky ? 'sticky top-0 z-[60]' : ''}`}>
+      <div
+        className="flex whitespace-nowrap"
+        style={{ animation: `marquee ${speed}s linear infinite` }}
+      >
+        {items.map((msg, i) => (
+          <span key={`${msg.id}-${i}`} className="mx-8">
+            {msg.emoji} {msg.text}
+            {showCountdown && msg.text.toLowerCase().includes('sale') && ` ${countdownText}`}
+          </span>
+        ))}
       </div>
     </div>
   );
