@@ -54,7 +54,7 @@ const HeroBanner = () => {
   };
 
   return (
-    <section className="relative bg-charcoal overflow-hidden">
+    <section className="relative bg-charcoal overflow-hidden hidden md:block">
       <Wrapper>
         <div className="relative">
           {banner.imageUrl ? (
