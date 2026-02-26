@@ -24,12 +24,12 @@ const BestSellingCarousel = () => {
   return (
     <section className="py-6 md:py-10">
       <div className="container">
-        <div className="flex items-center justify-between mb-5">
-          <div>
+        <div className="flex flex-col items-center mb-5">
+          <div className="text-center">
             <h2 className="section-title">{settings.headline}</h2>
-            <div className="w-8 h-1 bg-primary rounded-full mt-2" />
+            <div className="w-8 h-1 bg-primary rounded-full mt-2 mx-auto" />
           </div>
-          <div className="hidden md:flex gap-2">
+          <div className="hidden md:flex gap-2 mt-3">
             <button onClick={scrollPrev} className="w-9 h-9 border rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
               <ChevronLeft className="w-4 h-4" />
             </button>

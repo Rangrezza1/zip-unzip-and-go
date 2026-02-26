@@ -51,6 +51,7 @@ export interface FeaturedCollectionSection {
 export interface HeroBanner {
   id: string;
   imageUrl: string;
+  mobileImageUrl: string;
   title: string;
   subtitle: string;
   ctaText: string;
@@ -236,7 +237,7 @@ const defaultTheme: ThemeSettings = {
   },
   categoryItems: [],
   heroBanners: [
-    { id: 'default-1', imageUrl: '', title: 'Upto 50% OFF', subtitle: 'Premium Lawn & Dhanak collections. Shop Now Before It\'s Gone!', ctaText: 'Shop Now', ctaLink: '/collections' },
+    { id: 'default-1', imageUrl: '', mobileImageUrl: '', title: 'Upto 50% OFF', subtitle: 'Premium Lawn & Dhanak collections. Shop Now Before It\'s Gone!', ctaText: 'Shop Now', ctaLink: '/collections' },
   ],
   heroAutoRotate: true,
   heroRotateInterval: 5,
@@ -351,7 +352,7 @@ export const useThemeStore = create<ThemeStore>()(
         set({ theme: { ...get().theme, collectionSections: get().theme.collectionSections.filter((_, i) => i !== index) } }),
 
       addHeroBanner: () =>
-        set({ theme: { ...get().theme, heroBanners: [...get().theme.heroBanners, { id: `banner-${Date.now()}`, imageUrl: '', title: 'New Banner', subtitle: 'Edit this banner', ctaText: 'Shop Now', ctaLink: '/collections' }] } }),
+        set({ theme: { ...get().theme, heroBanners: [...get().theme.heroBanners, { id: `banner-${Date.now()}`, imageUrl: '', mobileImageUrl: '', title: 'New Banner', subtitle: 'Edit this banner', ctaText: 'Shop Now', ctaLink: '/collections' }] } }),
 
       updateHeroBanner: (id, partial) =>
         set({ theme: { ...get().theme, heroBanners: get().theme.heroBanners.map((b) => b.id === id ? { ...b, ...partial } : b) } }),
@@ -493,6 +494,7 @@ export const useThemeStore = create<ThemeStore>()(
             reviewsSection: { ...defaultTheme.reviewsSection, ...(pt.reviewsSection || {}) },
             bestSelling: { ...defaultTheme.bestSelling, ...(pt.bestSelling || {}) },
             whatsapp: { ...defaultTheme.whatsapp, ...(pt.whatsapp || {}) },
+            recommendedProducts: { ...defaultTheme.recommendedProducts, ...(pt.recommendedProducts || {}) },
           },
         } as ThemeStore;
       },

@@ -51,10 +51,10 @@ const RecommendedProducts = ({ currentHandle }: { currentHandle?: string }) => {
   return (
     <section className="py-8 md:py-12 overflow-hidden">
       <div className="container px-4">
-        {/* Gen Z header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
+        {/* Gen Z header — centered */}
+        <div className="flex flex-col items-center mb-6">
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 mb-1">
               <Sparkles className="w-5 h-5 text-primary" />
               <h2 className="text-lg md:text-xl font-bold tracking-tight">{settings.headline}</h2>
             </div>
@@ -62,7 +62,7 @@ const RecommendedProducts = ({ currentHandle }: { currentHandle?: string }) => {
               <p className="text-xs text-muted-foreground">{settings.subheading}</p>
             )}
           </div>
-          <div className="hidden md:flex items-center gap-1.5">
+          <div className="hidden md:flex items-center gap-1.5 mt-3">
             <button
               onClick={() => scroll('left')}
               disabled={!canScrollLeft}
