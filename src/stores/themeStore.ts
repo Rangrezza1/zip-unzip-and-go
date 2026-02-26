@@ -150,6 +150,18 @@ export interface WhatsAppSettings {
   message: string;
 }
 
+export interface RecommendedProductsSettings {
+  enabled: boolean;
+  headline: string;
+  subheading: string;
+  collectionHandle: string;
+  productLimit: number;
+  showBadges: boolean;
+  showPrice: boolean;
+  autoScroll: boolean;
+  scrollSpeed: number;
+}
+
 export interface ThemeSettings {
   // Announcement bar
   announcementMessages: AnnouncementMessage[];
@@ -193,6 +205,7 @@ export interface ThemeSettings {
   reviewsSection: ReviewsSectionSettings;
   bestSelling: BestSellingSettings;
   whatsapp: WhatsAppSettings;
+  recommendedProducts: RecommendedProductsSettings;
 }
 
 const defaultSections: SectionSettings[] = [
@@ -258,6 +271,7 @@ const defaultTheme: ThemeSettings = {
   reviewsSection: { enabled: true, headline: 'What Our Customers Say', displayCount: 10 },
   bestSelling: { enabled: true, collectionHandle: '', headline: 'Best Sellers', productLimit: 10 },
   whatsapp: { enabled: true, phoneNumber: '', message: 'Hi! I want to order this product:' },
+  recommendedProducts: { enabled: true, headline: 'You May Also Like 🔥', subheading: 'Curated picks just for you', collectionHandle: '', productLimit: 10, showBadges: true, showPrice: true, autoScroll: false, scrollSpeed: 3 },
 };
 
 interface ThemeStore {
