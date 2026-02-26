@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import AnnouncementBar from '@/components/AnnouncementBar';
 import Header from '@/components/Header';
 import HeroBanner from '@/components/HeroBanner';
+import MobileHeroCarousel from '@/components/MobileHeroCarousel';
 import ShopByCategory from '@/components/ShopByCategory';
 import PromoBanner from '@/components/PromoBanner';
 import Footer from '@/components/Footer';
@@ -29,6 +30,7 @@ const Index = () => {
       <AnnouncementBar />
       <Header />
       <main className="flex-1">
+        <MobileHeroCarousel />
         <SectionWrapper sectionId="hero">
           <HeroBanner />
         </SectionWrapper>
