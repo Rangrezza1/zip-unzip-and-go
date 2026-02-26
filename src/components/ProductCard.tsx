@@ -45,10 +45,10 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
     <a href={`/product/${node.handle}`} className="product-card group block">
       <div className="relative overflow-hidden bg-secondary aspect-[3/4]">
         {primaryImage && (
-          <img
+        <img
             src={primaryImage.url}
             alt={primaryImage.altText || node.title}
-            className="product-card-image group-hover:scale-105"
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
         )}
@@ -56,7 +56,7 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
           <img
             src={hoverImage.url}
             alt={hoverImage.altText || node.title}
-            className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            className="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-500"
             loading="lazy"
           />
         )}
