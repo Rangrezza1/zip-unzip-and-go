@@ -371,7 +371,8 @@ const AdminDashboard = ({ onSignOut }: { onSignOut: () => void }) => {
                     <div className="flex items-center justify-between gap-3"><label className="text-xs font-medium whitespace-nowrap">Subtitle</label><input type="text" value={banner.subtitle} onChange={(e) => updateHeroBanner(banner.id, { subtitle: e.target.value })} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" /></div>
                     <div className="flex items-center justify-between gap-3"><label className="text-xs font-medium whitespace-nowrap">CTA Text</label><input type="text" value={banner.ctaText} onChange={(e) => updateHeroBanner(banner.id, { ctaText: e.target.value })} className="w-32 text-xs bg-secondary border rounded px-2 py-1.5" /></div>
                     <div className="flex items-center justify-between gap-3"><label className="text-xs font-medium whitespace-nowrap">Banner Link</label><input type="text" value={banner.ctaLink} onChange={(e) => updateHeroBanner(banner.id, { ctaLink: e.target.value })} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" placeholder="/collections/summer" /></div>
-                    <ImageUploadField label="Banner Image" value={banner.imageUrl} onChange={(v) => updateHeroBanner(banner.id, { imageUrl: v })} />
+                    <ImageUploadField label="Desktop Banner Image" value={banner.imageUrl} onChange={(v) => updateHeroBanner(banner.id, { imageUrl: v })} />
+                    <ImageUploadField label="Mobile Banner Image" value={banner.mobileImageUrl || ''} onChange={(v) => updateHeroBanner(banner.id, { mobileImageUrl: v })} />
                   </div>
                 )}
               </div>

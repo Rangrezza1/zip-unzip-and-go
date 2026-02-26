@@ -13,41 +13,37 @@ const MobileHeroCarousel = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [translateX, setTranslateX] = useState(0);
+  const [isTouching, setIsTouching] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Card width = 80%, gap on each side = 10%
   const CARD_WIDTH_PERCENT = 80;
-  const PEEK_PERCENT = 10;
 
   const getContainerWidth = useCallback(() => {
     return containerRef.current?.offsetWidth || 375;
   }, []);
 
-  const getOffset = useCallback((index: number) => {
-    const cw = getContainerWidth();
-    const cardW = (CARD_WIDTH_PERCENT / 100) * cw;
-    const centerOffset = (cw - cardW) / 2;
-    return -(index * cardW) + centerOffset - (index * 8); // 8px gap
-  }, [getContainerWidth]);
-
-  // Auto-rotate
+  // Auto-rotate — pauses while touching
   useEffect(() => {
-    if (!autoRotate || count <= 1) return;
+    if (!autoRotate || count <= 1 || isTouching) {
+      if (autoTimerRef.current) clearInterval(autoTimerRef.current);
+      autoTimerRef.current = null;
+      return;
+    }
     autoTimerRef.current = setInterval(() => {
       setCurrent((c) => (c + 1) % count);
     }, interval * 1000);
     return () => {
       if (autoTimerRef.current) clearInterval(autoTimerRef.current);
     };
-  }, [autoRotate, interval, count]);
+  }, [autoRotate, interval, count, isTouching]);
 
   // Touch handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsDragging(true);
+    setIsTouching(true);
     setStartX(e.touches[0].clientX);
     setTranslateX(0);
-    if (autoTimerRef.current) clearInterval(autoTimerRef.current);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -66,12 +62,12 @@ const MobileHeroCarousel = () => {
       setCurrent((c) => (c - 1 + count) % count);
     }
     setTranslateX(0);
+    // Resume auto-rotation after a short delay
+    setTimeout(() => setIsTouching(false), 300);
   };
 
   if (count === 0) return null;
 
-  // Build infinite array: [last, ...all, first] for visual peek
-  // We use CSS transforms instead for true infinite feel
   const getVisibleSlides = () => {
     if (count === 1) return [{ banner: banners[0], index: 0 }];
     const slides: { banner: typeof banners[0]; index: number }[] = [];
@@ -87,10 +83,6 @@ const MobileHeroCarousel = () => {
   const cardW = (CARD_WIDTH_PERCENT / 100) * cw;
   const gap = 8;
   const centerOffset = (cw - cardW) / 2;
-
-  // For the extended array, index -1 is at position 0, index 0 at position 1, etc.
-  // current=0 means we want index 0 centered
-  // offset so that `current` slide is centered
   const baseTranslate = -((current + 1) * (cardW + gap)) + centerOffset;
   const finalTranslate = baseTranslate + (isDragging ? translateX : 0);
 
@@ -153,46 +145,50 @@ const MobileHeroCarousel = () => {
   );
 };
 
-const SlideContent = ({ banner, isActive }: { banner: { id: string; imageUrl: string; title: string; subtitle: string; ctaText: string }; isActive: boolean }) => (
-  <div
-    className="relative overflow-hidden transition-all duration-400"
-    style={{
-      aspectRatio: '3/4',
-      opacity: isActive ? 1 : 0.5,
-      transform: isActive ? 'scale(1)' : 'scale(0.95)',
-      transition: 'opacity 0.4s ease, transform 0.4s ease',
-    }}
-  >
-    {banner.imageUrl ? (
-      <img
-        src={banner.imageUrl}
-        alt={banner.title}
-        className="w-full h-full object-cover"
-        loading="eager"
-        draggable={false}
-      />
-    ) : (
-      <div className="w-full h-full bg-muted flex items-center justify-center">
-        <span className="text-muted-foreground text-xs">No image</span>
-      </div>
-    )}
-    {/* Overlay text */}
-    {(banner.title || banner.subtitle || banner.ctaText) && (
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-4 pt-16">
-        {banner.title && (
-          <h2 className="text-lg font-bold text-white leading-tight mb-1">{banner.title}</h2>
-        )}
-        {banner.subtitle && (
-          <p className="text-white/70 text-[11px] mb-2 line-clamp-2">{banner.subtitle}</p>
-        )}
-        {banner.ctaText && (
-          <span className="inline-block bg-primary text-primary-foreground text-[10px] font-semibold uppercase tracking-wider px-4 py-1.5">
-            {banner.ctaText}
-          </span>
-        )}
-      </div>
-    )}
-  </div>
-);
+const SlideContent = ({ banner, isActive }: { banner: { id: string; imageUrl: string; mobileImageUrl?: string; title: string; subtitle: string; ctaText: string }; isActive: boolean }) => {
+  // Use mobile image if available, fall back to desktop image
+  const displayImage = banner.mobileImageUrl || banner.imageUrl;
+
+  return (
+    <div
+      className="relative overflow-hidden transition-all duration-400"
+      style={{
+        aspectRatio: '3/4',
+        opacity: isActive ? 1 : 0.5,
+        transform: isActive ? 'scale(1)' : 'scale(0.95)',
+        transition: 'opacity 0.4s ease, transform 0.4s ease',
+      }}
+    >
+      {displayImage ? (
+        <img
+          src={displayImage}
+          alt={banner.title}
+          className="w-full h-full object-cover"
+          loading="eager"
+          draggable={false}
+        />
+      ) : (
+        <div className="w-full h-full bg-muted flex items-center justify-center">
+          <span className="text-muted-foreground text-xs">No image</span>
+        </div>
+      )}
+      {(banner.title || banner.subtitle || banner.ctaText) && (
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-4 pt-16">
+          {banner.title && (
+            <h2 className="text-lg font-bold text-white leading-tight mb-1">{banner.title}</h2>
+          )}
+          {banner.subtitle && (
+            <p className="text-white/70 text-[11px] mb-2 line-clamp-2">{banner.subtitle}</p>
+          )}
+          {banner.ctaText && (
+            <span className="inline-block bg-primary text-primary-foreground text-[10px] font-semibold uppercase tracking-wider px-4 py-1.5">
+              {banner.ctaText}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default MobileHeroCarousel;
