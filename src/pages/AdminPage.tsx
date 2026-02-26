@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 const FONT_OPTIONS = ['DM Sans', 'Inter', 'Poppins', 'Playfair Display', 'Lora', 'Montserrat', 'Roboto', 'Open Sans'];
 const HEADING_WEIGHTS = ['400', '500', '600', '700', '800'];
 
-type Tab = 'global' | 'announcement' | 'header' | 'hero' | 'categories' | 'sections' | 'featured' | 'widgets' | 'whatsapp' | 'bestselling' | 'reviews';
+type Tab = 'global' | 'announcement' | 'header' | 'hero' | 'categories' | 'sections' | 'featured' | 'widgets' | 'whatsapp' | 'bestselling' | 'recommended' | 'reviews';
 
 const ColorInput = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => {
   const hslToHex = (hsl: string) => {
@@ -131,6 +131,7 @@ const AdminDashboard = ({ onSignOut }: { onSignOut: () => void }) => {
     { key: 'widgets', label: 'Widgets' },
     { key: 'whatsapp', label: 'WhatsApp' },
     { key: 'bestselling', label: 'Best Selling' },
+    { key: 'recommended', label: 'Recommended' },
     { key: 'reviews', label: 'Reviews' },
   ];
 
@@ -523,6 +524,11 @@ const AdminDashboard = ({ onSignOut }: { onSignOut: () => void }) => {
         {activeTab === 'reviews' && (
           <ReviewsAdminTab />
         )}
+
+        {/* RECOMMENDED TAB */}
+        {activeTab === 'recommended' && (
+          <RecommendedTab />
+        )}
       </div>
     </div>
   );
@@ -804,6 +810,47 @@ const ReviewsAdminTab = () => {
               </div>
             ))}
           </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const RecommendedTab = () => {
+  const { theme, updateTheme } = useThemeStore();
+  const { data: collections } = useCollections();
+  const rec = theme.recommendedProducts ?? {
+    enabled: true, headline: 'You May Also Like 🔥', subheading: 'Curated picks just for you',
+    collectionHandle: '', productLimit: 10, showBadges: true, showPrice: true, autoScroll: false, scrollSpeed: 3,
+  };
+
+  return (
+    <div className="space-y-4 max-w-2xl">
+      <div className="bg-card border rounded-lg p-5 space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Recommended Products (Product Page)</h3>
+        <ToggleSwitch label="Enable" checked={rec.enabled} onChange={(v) => updateTheme({ recommendedProducts: { ...rec, enabled: v } })} />
+        <div className="flex items-center justify-between gap-3">
+          <label className="text-xs font-medium whitespace-nowrap">Headline</label>
+          <input type="text" value={rec.headline} onChange={(e) => updateTheme({ recommendedProducts: { ...rec, headline: e.target.value } })} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" />
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <label className="text-xs font-medium whitespace-nowrap">Subheading</label>
+          <input type="text" value={rec.subheading} onChange={(e) => updateTheme({ recommendedProducts: { ...rec, subheading: e.target.value } })} className="flex-1 text-xs bg-secondary border rounded px-2 py-1.5" />
+        </div>
+        <NumberInput label="Product Limit" value={rec.productLimit} onChange={(v) => updateTheme({ recommendedProducts: { ...rec, productLimit: v } })} min={4} max={20} />
+        {collections && collections.length > 0 && (
+          <SelectInput
+            label="Collection"
+            value={rec.collectionHandle}
+            options={[{ label: 'All Products', value: '' }, ...collections.map((c: { handle: string; title: string }) => ({ label: c.title, value: c.handle }))]}
+            onChange={(v) => updateTheme({ recommendedProducts: { ...rec, collectionHandle: v } })}
+          />
+        )}
+        <ToggleSwitch label="Show Badges" checked={rec.showBadges} onChange={(v) => updateTheme({ recommendedProducts: { ...rec, showBadges: v } })} />
+        <ToggleSwitch label="Show Price" checked={rec.showPrice} onChange={(v) => updateTheme({ recommendedProducts: { ...rec, showPrice: v } })} />
+        <ToggleSwitch label="Auto Scroll" checked={rec.autoScroll} onChange={(v) => updateTheme({ recommendedProducts: { ...rec, autoScroll: v } })} />
+        {rec.autoScroll && (
+          <NumberInput label="Scroll Speed (sec)" value={rec.scrollSpeed} onChange={(v) => updateTheme({ recommendedProducts: { ...rec, scrollSpeed: v } })} min={1} max={10} />
         )}
       </div>
     </div>

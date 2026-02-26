@@ -14,6 +14,7 @@ import SalesCounter from '@/components/widgets/SalesCounter';
 import LiveViewerCount from '@/components/widgets/LiveViewerCount';
 import CountdownTimer from '@/components/widgets/CountdownTimer';
 import ProductReviewSection from '@/components/ProductReviewSection';
+import RecommendedProducts from '@/components/RecommendedProducts';
 
 const ProductPage = () => {
   const { handle } = useParams<{ handle: string }>();
@@ -222,6 +223,7 @@ const ProductPage = () => {
             </div>
           </div>
         </div>
+        <RecommendedProducts currentHandle={handle} />
         <ProductReviewSection productHandle={handle || ''} productTitle={product.title} />
       </main>
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t px-3 py-2 md:hidden z-50">
