@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { trackViewContent, trackAddToCart } from '@/lib/tiktokPixel';
 import { useParams } from 'react-router-dom';
 import { useProduct } from '@/hooks/useProducts';
 import { useCartStore } from '@/stores/cartStore';
