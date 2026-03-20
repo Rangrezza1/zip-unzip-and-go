@@ -52,6 +52,8 @@ const ProductPage = () => {
       options.forEach((opt: { name: string; values: string[] }) => { initial[opt.name] = opt.values[0]; });
       setSelectedOptions(initial);
       setInitialized(true);
+      const p = product.priceRange?.minVariantPrice;
+      trackViewContent(product.id, product.title, parseFloat(p?.amount || '0'), p?.currencyCode || 'PKR');
     }
   }, [product, initialized]);
 
