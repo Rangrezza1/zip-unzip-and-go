@@ -31,6 +31,11 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
   const handleCheckout = () => {
     const checkoutUrl = getCheckoutUrl();
     if (checkoutUrl) {
+      trackInitiateCheckout(
+        items.map(i => ({ content_id: i.variantId, content_type: 'product' as const, content_name: i.product.node.title })),
+        totalPrice,
+        currencyCode
+      );
       window.open(checkoutUrl, '_blank');
       onClose();
     }

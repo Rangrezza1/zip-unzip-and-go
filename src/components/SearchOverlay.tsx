@@ -32,6 +32,7 @@ const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
+      trackSearch(query.trim());
       try {
         const products = await fetchProducts(8, `title:${query}*`);
         setResults(products);

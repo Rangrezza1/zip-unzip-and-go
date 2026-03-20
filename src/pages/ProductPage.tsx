@@ -90,6 +90,7 @@ const ProductPage = () => {
   const handleAddToCart = async () => {
     if (!selectedVariant) return;
     await addItem({ product: { node: product }, variantId: selectedVariant.id, variantTitle: selectedVariant.title, price: selectedVariant.price, quantity, selectedOptions: selectedVariant.selectedOptions || [] });
+    trackAddToCart(product.id, product.title, parseFloat(selectedVariant.price.amount) * quantity, selectedVariant.price.currencyCode);
     toast.success('Added to cart', { description: product.title, position: 'top-center' });
   };
 
