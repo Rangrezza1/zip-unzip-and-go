@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { trackViewContent, trackAddToCart } from '@/lib/tiktokPixel';
 import { useParams } from 'react-router-dom';
 import { useProduct } from '@/hooks/useProducts';
 import { useCartStore } from '@/stores/cartStore';
@@ -51,6 +52,8 @@ const ProductPage = () => {
       options.forEach((opt: { name: string; values: string[] }) => { initial[opt.name] = opt.values[0]; });
       setSelectedOptions(initial);
       setInitialized(true);
+      const p = product.priceRange?.minVariantPrice;
+      trackViewContent(product.id, product.title, parseFloat(p?.amount || '0'), p?.currencyCode || 'PKR');
     }
   }, [product, initialized]);
 
@@ -87,6 +90,7 @@ const ProductPage = () => {
   const handleAddToCart = async () => {
     if (!selectedVariant) return;
     await addItem({ product: { node: product }, variantId: selectedVariant.id, variantTitle: selectedVariant.title, price: selectedVariant.price, quantity, selectedOptions: selectedVariant.selectedOptions || [] });
+    trackAddToCart(product.id, product.title, parseFloat(selectedVariant.price.amount) * quantity, selectedVariant.price.currencyCode);
     toast.success('Added to cart', { description: product.title, position: 'top-center' });
   };
 

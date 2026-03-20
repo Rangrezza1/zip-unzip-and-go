@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { ShoppingBag, Minus, Plus, Trash2, Loader2, X } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { formatPrice } from '@/lib/shopify';
+import { trackInitiateCheckout } from '@/lib/tiktokPixel';
 
 interface CartDrawerProps {
   open: boolean;
@@ -30,6 +31,11 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
   const handleCheckout = () => {
     const checkoutUrl = getCheckoutUrl();
     if (checkoutUrl) {
+      trackInitiateCheckout(
+        items.map(i => ({ content_id: i.variantId, content_type: 'product' as const, content_name: i.product.node.title })),
+        totalPrice,
+        currencyCode
+      );
       window.open(checkoutUrl, '_blank');
       onClose();
     }

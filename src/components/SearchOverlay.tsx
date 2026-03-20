@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, X, Loader2 } from 'lucide-react';
 import { fetchProducts, ShopifyProduct, formatPrice, getDiscountPercentage } from '@/lib/shopify';
+import { trackSearch } from '@/lib/tiktokPixel';
 
 interface SearchOverlayProps {
   open: boolean;
@@ -31,6 +32,7 @@ const SearchOverlay = ({ open, onClose }: SearchOverlayProps) => {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
+      trackSearch(query.trim());
       try {
         const products = await fetchProducts(8, `title:${query}*`);
         setResults(products);
